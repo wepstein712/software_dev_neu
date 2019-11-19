@@ -40,6 +40,19 @@ exports.LETTERS_MAP = LETTERS.reduce(
   {}
 );
 
+exports.MESSAGE_ACTIONS = {
+  SET_COLOR: 'color',
+  TURN_STATUS: 'is_turn',
+  DEAL_HAND: 'new_hand',
+  PROMPT_FOR_ACTION: 'request_action',
+  CLEAR_HAND: 'dump_hand',
+  REMOVE_PLAYER: 'lose',
+  UPDATE_STATE: 'update_view',
+  GAME_OVER: 'game_over',
+  DENY_ENTRY: 'fail_conn',
+  SEND_ACTION: 'submit_action',
+};
+
 exports.PORTS = {
   ZERO: 0,
   ONE: 1,
