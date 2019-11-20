@@ -22,7 +22,6 @@ referee.addPlayer(wirt); // Wirt wins
 // referee.addPlayer(greg); // Jill wins
 // referee.addPlayer(woodsman); // Jack wins
 // referee.addPlayer(beast); // Max players reached
-referee.notifyPlayersOfColors();
 referee.runGame();
 
 observer.renderToFile('final.png');

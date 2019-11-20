@@ -46,12 +46,13 @@ class Player {
   }
 
   /**
-   * Sets this player's color to the referee-assigned color.
+   * Sets the player of the given ID's color to the referee-assigned color.
    *
-   * @param {string} color this player's avatar's color
+   * @param {string} id the id of the player
+   * @param {string} color the player's avatar's color
    */
-  setColor(color) {
-    this.colors[this.id] = color;
+  setColor(id, color) {
+    this.colors[id] = color;
   }
 
   /**
@@ -61,17 +62,6 @@ class Player {
    */
   getColor() {
     return this.colors[this.id];
-  }
-
-  /**
-   * Adds a map of player IDs to colors, so this player knows which player
-   * is which color in the game.
-   *
-   * @param {{ [id: string]: string }} colorMap a map of player's ID to their
-   * associated avatar color
-   */
-  setPlayerColors(colorMap) {
-    this.colors = Object.assign(this.colors, colorMap);
   }
 
   /**
@@ -93,26 +83,28 @@ class Player {
    */
   getAction(isInitial = false) {
     if (isInitial) {
-      return this.getInitialAction();
+      return this._getInitialAction();
     }
-    return this.getIntermediateAction();
+    return this._getIntermediateAction();
   }
 
   /**
+   * @private
    * Gets the initial action of this player, as determined by the strategy,
    *
    * @returns {InitialAction} the player's initial action
    */
-  getInitialAction() {
+  _getInitialAction() {
     return this.strategy.getInitialAction(this.id, this.hand, this.boardState);
   }
 
   /**
+   * @private
    * Gets the next intermediate action for the player, as determined by the strategy.
    *
    * @returns {IntermediateAction} the player's next action
    */
-  getIntermediateAction() {
+  _getIntermediateAction() {
     return this.strategy.getIntermediateAction(this.id, this.hand, this.boardState);
   }
 

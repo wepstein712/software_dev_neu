@@ -38,13 +38,13 @@ class Observer {
   }
 
   /**
-   * Sets the player ID-to-colors map as given by the referee.
+   * Sets the referee-assigned color for the player of the given ID.
    *
-   * @param {object} playerColors a map from player ID to
-   * corresponding player color
+   * @param {string} id the ID of the player
+   * @param {string} color the color of the player
    */
-  setPlayerColors(playerColors) {
-    this._playerColors = playerColors;
+  setPlayerColor(id, color) {
+    this._playerColors[id] = color;
   }
 
   /**

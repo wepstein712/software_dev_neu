@@ -32,6 +32,10 @@ class Referee {
   addObserver(observer) {
     const { id } = observer;
     this.observerMap[id] = observer;
+
+    this.playerIds.forEach(playerId => {
+      observer.setColor(playerId, this.playerMap[playerId].getColor());
+    });
   }
 
   /**
@@ -67,27 +71,22 @@ class Referee {
       throw 'Max players already added.';
     }
     const { id } = player;
+    const color = COLOR_SET[playerIdx];
+    player.setColor(id, color);
+
     this.playerMap[id] = player;
     this.currentPlayers[id] = player;
     this.playerIds.push(id);
-    player.setColor(COLOR_SET[playerIdx]);
-  }
 
-  /**
-   * Notifies all players and observers of the other players' colors.
-   */
-  notifyPlayersOfColors() {
-    const idToColorMap = this.playerIds.reduce((acc, id) => {
-      const color = this.playerMap[id].getColor();
-      return Object.assign(acc, {
-        [id]: color,
-      });
-    }, {});
-    this.playerIds.forEach(id => {
-      this.playerMap[id].setPlayerColors(idToColorMap);
+    this.playerIds.forEach(playerId => {
+      // sets this player's color for existing players
+      this.playerMap[playerId].setColor(id, color);
+      // sets existing player's color for this player
+      player.setColor(playerId, this.playerMap[playerId].getColor());
     });
+
     this._updateObservers(observer => {
-      observer.setPlayerColors(idToColorMap);
+      observer.setPlayerColor(id, color);
     });
   }
 
