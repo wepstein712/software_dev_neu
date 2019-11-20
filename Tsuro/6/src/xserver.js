@@ -1,3 +1,10 @@
 const { Server } = require('../../Remote');
 
-new Server('127.0.0.1', 8000);
+const main = () => {
+  const flags = process.argv.slice(2);
+  const [ipAddress, port] = flags;
+
+  new Server(ipAddress, port);
+};
+
+main();

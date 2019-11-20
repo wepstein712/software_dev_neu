@@ -23,18 +23,11 @@ class Server {
     this._createServer();
   }
 
-  _onClientEnd(sessionId) {
-    return () => {
-      delete this.clients[sessionId];
-      console.log(sessionId, '>>', 'DELETED');
-    };
-  }
-
   _handleRegisterClient(client, payload) {
     const { id, strategy } = payload;
     this.logger.log(id, '>>', 'create player', id, 'with strategy', strategy);
 
-    // TODO: make actual strategy
+    // TODO: make strategy (case-insensitive) string into actual strategy
     const player = new Player(id, id, strategy);
     this.referee.addPlayer(player);
     const color = player.getColor();
@@ -68,6 +61,13 @@ class Server {
         // TODO: send invalid JSON message
         console.log('invalid JSON');
       }
+    };
+  }
+
+  _onClientEnd(sessionId) {
+    return () => {
+      delete this.clients[sessionId];
+      console.log(sessionId, '>>', 'DELETED');
     };
   }
 

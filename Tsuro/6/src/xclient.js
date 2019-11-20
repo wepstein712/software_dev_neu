@@ -1,3 +1,10 @@
 const { Client } = require('../../Remote');
 
-new Client('127.0.0.1', 8000, 'jim', 'dumb');
+const main = () => {
+  const flags = process.argv.slice(2);
+  const [ipAddress, port, name, strategy] = flags;
+
+  new Client(ipAddress, port, name, strategy);
+};
+
+main();
