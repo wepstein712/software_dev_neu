@@ -101,6 +101,7 @@ class Client {
     if (handler) {
       handler.bind(this)(payload);
     } else {
+      // TODO: send message?
       console.log('unknown action');
     }
   }
@@ -115,7 +116,7 @@ class Client {
         });
       } catch (err) {
         console.log(err);
-        // TODO: send invalid JSON message
+        // TODO: send invalid JSON message?
         console.log('invalid JSON');
       }
     };

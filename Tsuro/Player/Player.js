@@ -1,8 +1,8 @@
-const PlayerInterface = require('./PlayerInterface');
+const BasePlayer = require('./BasePlayer');
 const { BoardState } = require('../Common');
 const { GAME_STATUS } = require('../Common/utils/constants');
 
-class Player extends PlayerInterface {
+class Player extends BasePlayer {
   /**
    * Creates a new Player, with an empty hand. Sets `gameStatus`
    * to `Waiting` and the `boardState` to an empty board.
@@ -51,7 +51,7 @@ class Player extends PlayerInterface {
    */
   setColor(id, color) {
     this.colors[id] = color;
-    console.log(this.colors);
+    // console.log(this.colors);
   }
 
   /**
@@ -116,7 +116,7 @@ class Player extends PlayerInterface {
 
   // eslint-disable-next-line no-unused-vars
   lose(forLegalMove) {
-    // TODO:
+    // TODO: stub
   }
 
   /**

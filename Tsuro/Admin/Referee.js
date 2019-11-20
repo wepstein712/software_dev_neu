@@ -93,6 +93,10 @@ class Referee {
     return color;
   }
 
+  getPlayers() {
+    return this.playerIds.slice();
+  }
+
   /**
    * @private
    * Checks whether the given player has an avatar currently on

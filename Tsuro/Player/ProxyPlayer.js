@@ -1,9 +1,9 @@
-const PlayerInterface = require('./PlayerInterface');
+const BasePlayer = require('./BasePlayer');
 const Message = require('../Common/message');
 const { Coords, InitialAction, IntermediateAction, Position, SimpleTile } = require('../Common');
 const { MESSAGE_ACTIONS } = require('../Common/utils/constants');
 
-class ProxyPlayer extends PlayerInterface {
+class ProxyPlayer extends BasePlayer {
   /**
    * Creates a new Player.
    *
@@ -105,16 +105,15 @@ class ProxyPlayer extends PlayerInterface {
         const text = data.toString().trim();
         try {
           const message = JSON.parse(text.split('\n')[0]);
-          console.log(this.id, message);
           const { action, payload } = message;
           if (action !== MESSAGE_ACTIONS.SEND_ACTION) {
-            // TODO: resolve unknown action
+            // TODO: resolve unknown action, should we kick them?
             console.log('unknown action');
           } else {
             resolve(this._getActionFromPayload(payload, isInitial));
           }
         } catch (err) {
-          // TODO: resolve invalid json
+          // TODO: resolve invalid json, should we kick them?
           console.log('invalid JSON');
         }
       };

@@ -1,7 +1,7 @@
 [
   {
     "name": "rebecca",
-    "strategy": "crazy"
+    "strategy": "dumb"
   },
   {
     "name": "josh_chan",
@@ -9,14 +9,14 @@
   },
   {
     "name": "greg",
-    "strategy": "clumsy"
+    "strategy": "dumb"
   },
   {
     "name": "paula",
-    "strategy": "strategic"
+    "strategy": "dumb"
   },
   {
     "name": "nathaniel",
-    "strategy": "calculated"
+    "strategy": "dumb"
   }
 ]

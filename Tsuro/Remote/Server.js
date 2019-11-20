@@ -2,10 +2,13 @@ const { createServer } = require('net');
 const Logger = require('./Logger');
 const { Referee } = require('../Admin');
 const ProxyPlayer = require('../Player/ProxyPlayer');
+const Message = require('../Common/Message');
 const { MESSAGE_ACTIONS } = require('../Common/utils/constants');
 require('../Common/utils/polyfills');
 
-// const MIN_PLAYER_SIZE = 3;
+const MIN_PLAYER_SIZE = 3;
+const MAX_PLAYER_SIZE = 5;
+
 const SECOND = 1000;
 
 class Server {
@@ -27,31 +30,32 @@ class Server {
   }
 
   async _runGame() {
+    this._standbyTimeout = null;
     this._hasGameStarted = true;
     await this.referee.runGame();
-    Object.values(this.clients).forEach(({ client }) => {
-      client.destroy();
-    });
-    process.exit(0);
+    setTimeout(() => {
+      Object.values(this.clients).forEach(({ client }) => {
+        client.destroy();
+      });
+      process.exit(0);
+    }, 10);
   }
 
   _kickClient(client) {
-    client.write('game has already started'); // TODO: change to message
+    const message = new Message(MESSAGE_ACTIONS.DENY_ENTRY, 'Game has already begun.');
+    client.write(message.toString());
     client.destroy();
   }
 
-  _checkForGameStart(client) {
-    const numClients = Object.keys(this.clients).length;
-    if (numClients === 3) {
+  _checkForGameStart() {
+    const numPlayers = this.referee.getPlayers().length;
+    if (numPlayers === MIN_PLAYER_SIZE) {
       this._standbyTimeout = setTimeout(() => {
-        this._standbyTimeout = null;
         this._runGame();
       }, 30 * SECOND);
-    } else if (numClients === 5 && this._standbyTimeout) {
+    } else if (numPlayers === MAX_PLAYER_SIZE && this._standbyTimeout) {
       clearTimeout(this._standbyTimeout);
       this._runGame();
-    } else if (numClients >= 5) {
-      this._kickClient(client);
     }
   }
 
@@ -72,7 +76,7 @@ class Server {
     this.logger.log(id, '>>', 'create player', id, 'with strategy', strategy);
     this.logger.log(id, '<<', 'set color to', color);
 
-    this._checkForGameStart(client);
+    this._checkForGameStart();
   }
 
   _handleMessage(sessionId, message) {
@@ -118,7 +122,7 @@ class Server {
 
   _onClientConnect(client) {
     if (this._hasGameStarted) {
-      this._kickClient(client);
+      return this._kickClient(client);
     }
     const sessionId = this._getRandomSessionId();
     this.clients[sessionId] = {
@@ -131,9 +135,7 @@ class Server {
   }
 
   _createServer() {
-    this.server = createServer(client => {
-      this._onClientConnect(client);
-    });
+    this.server = createServer(this._onClientConnect.bind(this));
     this.server.listen(this.port, this.ipAddress);
   }
 }

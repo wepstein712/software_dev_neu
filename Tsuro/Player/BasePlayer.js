@@ -5,7 +5,7 @@ const STRATEGY_MAP = {
   [STRATEGIES.DUMB]: DumbStrategy,
 };
 
-class PlayerInterface {
+class BasePlayer {
   /**
    * Creates a new Player.
    *
@@ -116,4 +116,4 @@ class PlayerInterface {
   }
 }
 
-module.exports = PlayerInterface;
+module.exports = BasePlayer;
