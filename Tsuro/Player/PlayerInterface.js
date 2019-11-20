@@ -1,11 +1,13 @@
-const PlayerInterface = require('./PlayerInterface');
-const { BoardState } = require('../Common');
-const { GAME_STATUS } = require('../Common/utils/constants');
+const DumbStrategy = require('./Strategy/DumbStrategy');
+const { STRATEGIES } = require('../Common/utils/constants');
 
-class Player extends PlayerInterface {
+const STRATEGY_MAP = {
+  [STRATEGIES.DUMB]: DumbStrategy,
+};
+
+class PlayerInterface {
   /**
-   * Creates a new Player, with an empty hand. Sets `gameStatus`
-   * to `Waiting` and the `boardState` to an empty board.
+   * Creates a new Player.
    *
    * @param {string} id the unique ID of the player
    * @param {string} name the name of the player
@@ -13,12 +15,14 @@ class Player extends PlayerInterface {
    * be used to make moves for the player
    */
   constructor(id, name, strategy) {
-    super(id, name, strategy);
-    this.colors = {};
-    this.hand = [];
-    this.gameStatus = GAME_STATUS.WAITING;
-    this.boardState = new BoardState();
-    this._shouldPrintResults = true;
+    this.id = id;
+    this.name = name;
+
+    const chosenStrategy = STRATEGY_MAP[strategy];
+    if (!chosenStrategy) {
+      throw 'Invalid strategy';
+    }
+    this.strategy = chosenStrategy;
   }
 
   /**
@@ -28,9 +32,9 @@ class Player extends PlayerInterface {
    *
    * @param {boolean} isCurrentTurn whether it's currently the player's turn
    */
+  // eslint-disable-next-line no-unused-vars
   setTurnStatus(isCurrentTurn) {
-    const gameStatus = isCurrentTurn ? GAME_STATUS.CURRENT_TURN : GAME_STATUS.WAITING;
-    this.gameStatus = gameStatus;
+    throw 'Implement!';
   }
 
   /**
@@ -39,8 +43,9 @@ class Player extends PlayerInterface {
    *
    * @param {BoardState} boardState the new BoardState given by the referee
    */
+  // eslint-disable-next-line no-unused-vars
   updateState(boardState) {
-    this.boardState = boardState;
+    throw 'Implement!';
   }
 
   /**
@@ -49,9 +54,9 @@ class Player extends PlayerInterface {
    * @param {string} id the id of the player
    * @param {string} color the player's avatar's color
    */
+  // eslint-disable-next-line no-unused-vars
   setColor(id, color) {
-    this.colors[id] = color;
-    console.log(this.colors);
+    throw 'Implement!';
   }
 
   /**
@@ -60,7 +65,7 @@ class Player extends PlayerInterface {
    * @returns {string} the player's avatar's color
    */
   getColor() {
-    return this.colors[this.id];
+    throw 'Implement!';
   }
 
   /**
@@ -69,8 +74,9 @@ class Player extends PlayerInterface {
    *
    * @param {Tile[]} hand the new array (hand) of tiles
    */
+  // eslint-disable-next-line no-unused-vars
   receiveHand(hand) {
-    this.hand = hand;
+    throw 'Implement!';
   }
 
   /**
@@ -80,51 +86,21 @@ class Player extends PlayerInterface {
    * @param {boolean} [isInitial=false] whether the action to retrieve
    * should be the player's initial action
    */
+  // eslint-disable-next-line no-unused-vars
   getAction(isInitial = false) {
-    if (isInitial) {
-      return this._getInitialAction();
-    }
-    return this._getIntermediateAction();
-  }
-
-  /**
-   * @private
-   * Gets the initial action of this player, as determined by the strategy,
-   *
-   * @returns {InitialAction} the player's initial action
-   */
-  _getInitialAction() {
-    return this.strategy.getInitialAction(this.id, this.hand, this.boardState);
-  }
-
-  /**
-   * @private
-   * Gets the next intermediate action for the player, as determined by the strategy.
-   *
-   * @returns {IntermediateAction} the player's next action
-   */
-  _getIntermediateAction() {
-    return this.strategy.getIntermediateAction(this.id, this.hand, this.boardState);
+    throw 'Implement!';
   }
 
   /**
    * Removes all tiles from the current hand.
    */
   clearHand() {
-    this.hand = [];
+    throw 'Implement!';
   }
 
   // eslint-disable-next-line no-unused-vars
   lose(forLegalMove) {
-    // TODO:
-  }
-
-  /**
-   * Sets whether this player will print out who won their game at the end.
-   * @param {Boolean} flag if the player should print
-   */
-  setPlayerPrintResultsStatus(flag) {
-    this._shouldPrintResults = flag;
+    throw 'Implement!';
   }
 
   /**
@@ -134,12 +110,10 @@ class Player extends PlayerInterface {
    * @param {string[]} winners the player ID(s) of the winner(s)
    * of the game
    */
+  // eslint-disable-next-line no-unused-vars
   endGame(winners, losers) {
-    this.gameStatus = GAME_STATUS.GAME_OVER;
-    if (this._shouldPrintResults) {
-      console.log(winners, losers);
-    }
+    throw 'Implement!';
   }
 }
 
-module.exports = Player;
+module.exports = PlayerInterface;

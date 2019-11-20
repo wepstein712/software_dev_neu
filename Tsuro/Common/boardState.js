@@ -231,6 +231,16 @@ class BoardState {
       avatar.render(avatarGroup, xStart, yStart, tileSize);
     });
   }
+
+  toJson() {
+    const tiles = this._tiles.map(row => row.map(tile => (tile ? tile.index : null)));
+    const avatars = this.getAvatars().map(avatar => avatar.toJson());
+    return {
+      tiles,
+      avatars,
+      initialAvatarHashes: this._initialAvatarHashes,
+    };
+  }
 }
 
 module.exports = BoardState;

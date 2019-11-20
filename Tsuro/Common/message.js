@@ -18,10 +18,11 @@ class Message {
    * @returns {string} the stringified message
    */
   toString() {
-    return JSON.stringify({
+    const message = JSON.stringify({
       action: this.action,
       payload: this.payload,
     });
+    return `${message}\n`;
   }
 }
 

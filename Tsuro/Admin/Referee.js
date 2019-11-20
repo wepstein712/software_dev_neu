@@ -1,5 +1,5 @@
-const { Board, RuleChecker } = require('../Common');
-const { getTileFromLetters, incrementIndex } = require('../Common/utils');
+const { Board, RuleChecker, SimpleTile } = require('../Common');
+const { incrementIndex } = require('../Common/utils');
 const { COLORS } = require('../Common/utils/constants');
 const { tiles } = require('../Common/__tests__');
 
@@ -64,6 +64,7 @@ class Referee {
    * Adds a player to the current game, and sets their color.
    *
    * @param {Player} player the player to add to the game
+   * @returns {string} the color the player was set to
    */
   addPlayer(player) {
     const playerIdx = this.playerIds.length;
@@ -73,10 +74,6 @@ class Referee {
     const { id } = player;
     const color = COLOR_SET[playerIdx];
     player.setColor(id, color);
-
-    this.playerMap[id] = player;
-    this.currentPlayers[id] = player;
-    this.playerIds.push(id);
 
     this.playerIds.forEach(playerId => {
       // sets this player's color for existing players
@@ -88,6 +85,12 @@ class Referee {
     this._updateObservers(observer => {
       observer.setPlayerColor(id, color);
     });
+
+    this.playerMap[id] = player;
+    this.currentPlayers[id] = player;
+    this.playerIds.push(id);
+
+    return color;
   }
 
   /**
@@ -127,8 +130,7 @@ class Referee {
   _getHand(size) {
     const hand = [];
     for (let i = 0; i < size; i++) {
-      const tile = getTileFromLetters(tiles[this.deckIdx]);
-      hand.push(tile);
+      hand.push(new SimpleTile(this.deckIdx));
       this.deckIdx = incrementIndex(this.deckIdx, tiles);
     }
     return hand;
@@ -238,7 +240,7 @@ class Referee {
    * @param {Player} player the player to remove from play
    * @param {boolean} [fromLegalMove=true] will add to rejected players if false
    */
-  _removePlayer(player, fromLegalMove = true) {
+  removePlayer(player, fromLegalMove = true) {
     const { id } = player;
     delete this.currentPlayers[id];
 
@@ -251,6 +253,7 @@ class Referee {
       this.rejectedPlayers.push(id);
     }
 
+    player.lose(fromLegalMove);
     this._updateObservers(observer => {
       observer.removePlayer(id);
     });
@@ -271,7 +274,7 @@ class Referee {
       try {
         this.board.placeInitialTileAvatar(player, tile, coords, position);
       } catch (err) {
-        this._removePlayer(player);
+        this.removePlayer(player);
       }
     } else {
       this.board.placeTile(tile, coords);
@@ -293,14 +296,14 @@ class Referee {
    * @param {boolean} [isInitial=false] whether to prompt for an initial or
    * intermediate action
    */
-  _promptPlayerForAction(player, isInitial = false) {
+  async _promptPlayerForAction(player, isInitial = false) {
     const handSize = isInitial ? 3 : 2;
     const boardState = this._startPlayerTurn(player, handSize);
-    const action = player.getAction(isInitial);
+    const action = await player.getAction(isInitial);
     const isLegal = this._checkForActionLegality(boardState, player, action, isInitial);
     const isValid = this._checkForActionValidity(boardState, player, action, isInitial);
     if (!isValid || !isLegal) {
-      this._removePlayer(player, isLegal);
+      this.removePlayer(player, isLegal);
     }
     if (isLegal) {
       this._usePlayerAction(player, action, isInitial);
@@ -315,30 +318,29 @@ class Referee {
    * avatar and can move, they will be prompted for an intermediate action. If
    * neither, they will be removed from play.
    */
-  _nextPlayer() {
+  async _nextPlayer() {
     this.currentPlayerIdx = incrementIndex(this.currentPlayerIdx, this.playerIds);
     const id = this.playerIds[this.currentPlayerIdx];
     const player = this.currentPlayers[id];
 
     if (player) {
       if (!this._hasAvatar(player)) {
-        this._promptPlayerForAction(player, true);
+        await this._promptPlayerForAction(player, true);
       } else if (this._canPlayerMove(player)) {
-        this._promptPlayerForAction(player);
+        await this._promptPlayerForAction(player);
       } else {
-        this._removePlayer(player);
+        this.removePlayer(player);
       }
     }
   }
 
   /**
-   * @private
    * Checks whether the game is over yet, that is if one or no players
    * are left on the board.
    *
    * @returns {boolean} whether the game is over yet
    */
-  _isGameOver() {
+  isGameOver() {
     return Object.keys(this.currentPlayers).length <= 1;
   }
 
@@ -378,8 +380,9 @@ class Referee {
    */
   _notifyPlayersOfGameOver() {
     const winners = this.getWinners();
+    const losers = this.getLosers();
     this.playerIds.forEach(id => {
-      this.playerMap[id].endGame(winners);
+      this.playerMap[id].endGame(winners, losers);
     });
   }
 
@@ -388,13 +391,13 @@ class Referee {
    * will loop until the game is over, at which point all players will
    * be notified of game over and who won.
    */
-  runGame() {
+  async runGame() {
     if (this.playerIds.length <= 1) {
       throw 'At least two players are required to game.';
     }
 
-    while (!this._isGameOver()) {
-      this._nextPlayer();
+    while (!this.isGameOver()) {
+      await this._nextPlayer();
     }
 
     this._notifyPlayersOfGameOver();

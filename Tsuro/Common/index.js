@@ -3,6 +3,7 @@ const { InitialAction, IntermediateAction } = require('./action');
 
 exports.Avatar = require('./avatar');
 exports.Tile = require('./tiles');
+exports.SimpleTile = require('./SimpleTile');
 exports.BoardState = require('./boardState');
 exports.Board = require('./board');
 exports.Coords = require('./coords');

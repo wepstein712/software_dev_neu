@@ -1,11 +1,12 @@
 const { createServer } = require('net');
 const Logger = require('./Logger');
 const { Referee } = require('../Admin');
-const Player = require('../Player/Player');
-const Message = require('../Common/message');
+const ProxyPlayer = require('../Player/ProxyPlayer');
 const { MESSAGE_ACTIONS } = require('../Common/utils/constants');
+require('../Common/utils/polyfills');
 
 // const MIN_PLAYER_SIZE = 3;
+const SECOND = 1000;
 
 class Server {
   constructor(ipAddress = '127.0.0.1', port = 8000) {
@@ -17,45 +18,83 @@ class Server {
     this.referee = new Referee();
 
     this.handlers = {
-      [MESSAGE_ACTIONS.REGISTER_CLIENT]: this._handleRegisterClient.bind(this),
+      [MESSAGE_ACTIONS.REGISTER_CLIENT]: this._handleRegisterClient,
     };
 
+    this._standbyTimeout = null;
+    this._hasGameStarted = false;
     this._createServer();
   }
 
-  _handleRegisterClient(client, payload) {
-    const { id, strategy } = payload;
-    this.logger.log(id, '>>', 'create player', id, 'with strategy', strategy);
-
-    // TODO: make strategy (case-insensitive) string into actual strategy
-    const player = new Player(id, id, strategy);
-    this.referee.addPlayer(player);
-    const color = player.getColor();
-
-    const message = new Message(MESSAGE_ACTIONS.SET_COLOR, color);
-    client.write(message.toString());
-    this.logger.log(id, '<<', 'set color to', color);
+  async _runGame() {
+    this._hasGameStarted = true;
+    await this.referee.runGame();
+    Object.values(this.clients).forEach(({ client }) => {
+      client.destroy();
+    });
+    process.exit(0);
   }
 
-  _handleMessage(client, message) {
+  _kickClient(client) {
+    client.write('game has already started'); // TODO: change to message
+    client.destroy();
+  }
+
+  _checkForGameStart(client) {
+    const numClients = Object.keys(this.clients).length;
+    if (numClients === 3) {
+      this._standbyTimeout = setTimeout(() => {
+        this._standbyTimeout = null;
+        this._runGame();
+      }, 30 * SECOND);
+    } else if (numClients === 5 && this._standbyTimeout) {
+      clearTimeout(this._standbyTimeout);
+      this._runGame();
+    } else if (numClients >= 5) {
+      this._kickClient(client);
+    }
+  }
+
+  /**
+   *
+   * @param {string} sessionId
+   * @param {any} payload
+   */
+  _handleRegisterClient(sessionId, payload) {
+    const { client } = this.clients[sessionId];
+    const { id, strategy } = payload;
+
+    const player = new ProxyPlayer(id, id, strategy, client);
+    const color = this.referee.addPlayer(player);
+
+    this.clients[sessionId].id = id;
+
+    this.logger.log(id, '>>', 'create player', id, 'with strategy', strategy);
+    this.logger.log(id, '<<', 'set color to', color);
+
+    this._checkForGameStart(client);
+  }
+
+  _handleMessage(sessionId, message) {
     const { action, payload } = message;
 
     const handler = this.handlers[action];
     if (handler) {
-      handler(client, payload);
+      handler.bind(this)(sessionId, payload);
     } else {
       // TODO: send unknown action message
-      console.log('unknown action');
+      console.log('DEFINITE unknown action');
     }
   }
 
   _onClientData(sessionId) {
-    const { client } = this.clients[sessionId];
     return data => {
       const text = data.toString().trim();
       try {
-        const message = JSON.parse(text);
-        this._handleMessage(client, message);
+        text.split('\n').forEach(msgText => {
+          const message = JSON.parse(msgText);
+          this._handleMessage(sessionId, message);
+        });
       } catch (err) {
         console.log(err);
         // TODO: send invalid JSON message
@@ -66,8 +105,8 @@ class Server {
 
   _onClientEnd(sessionId) {
     return () => {
+      this.referee.removePlayer(this.clients[sessionId].id, false);
       delete this.clients[sessionId];
-      console.log(sessionId, '>>', 'DELETED');
     };
   }
 
@@ -78,17 +117,17 @@ class Server {
   }
 
   _onClientConnect(client) {
+    if (this._hasGameStarted) {
+      this._kickClient(client);
+    }
     const sessionId = this._getRandomSessionId();
     this.clients[sessionId] = {
       client,
       id: null,
-      strategy: null,
     };
 
-    client.on('data', this._onClientData(sessionId));
+    client.once('data', this._onClientData(sessionId));
     client.on('end', this._onClientEnd(sessionId));
-
-    console.log(sessionId, '>>', 'CONNECTED');
   }
 
   _createServer() {

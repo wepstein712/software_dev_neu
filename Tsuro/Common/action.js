@@ -8,6 +8,13 @@ class Action {
     this.tile = tile;
     this.coords = coords;
   }
+
+  toJson() {
+    return {
+      tile: this.tile.index,
+      coords: this.coords,
+    };
+  }
 }
 
 class InitialAction extends Action {
@@ -20,6 +27,11 @@ class InitialAction extends Action {
   constructor(tile, coords, position) {
     super(tile, coords);
     this.position = position;
+  }
+
+  toJson() {
+    const json = super.toJson();
+    return Object.assign(json, { position: this.position });
   }
 }
 

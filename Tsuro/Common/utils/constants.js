@@ -58,3 +58,7 @@ exports.PORTS = {
   ZERO: 0,
   ONE: 1,
 };
+
+exports.STRATEGIES = {
+  DUMB: 'dumb',
+};
