@@ -41,7 +41,7 @@ exports.LETTERS_MAP = LETTERS.reduce(
 );
 
 exports.MESSAGE_ACTIONS = {
-  SET_COLOR: 'color',
+  SET_COLOR: 'set_color',
   TURN_STATUS: 'is_turn',
   DEAL_HAND: 'new_hand',
   PROMPT_FOR_ACTION: 'request_action',
@@ -50,6 +50,7 @@ exports.MESSAGE_ACTIONS = {
   UPDATE_STATE: 'update_view',
   GAME_OVER: 'game_over',
   DENY_ENTRY: 'fail_conn',
+  REGISTER_CLIENT: 'register',
   SEND_ACTION: 'submit_action',
 };
 

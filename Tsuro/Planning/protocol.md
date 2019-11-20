@@ -28,7 +28,7 @@ These are actions that would be sent from the server to the client.
 
 | Description       | Action           | Payload                                           |
 | ----------------- | ---------------- | ------------------------------------------------- |
-| set color         | `color`          | `{ id: string, color: string, strategy: string }` |
+| set color         | `set_color`      | `{ id: string, color: string, strategy: string }` |
 | turn status       | `is_turn`        | `isTurn: boolean`                                 |
 | deal hand         | `new_hand`       | `tileIndices: string[]`                           |
 | prompt for action | `request_action` | `isInitial: boolean`                              |
@@ -42,6 +42,7 @@ These are actions that would be sent from the server to the client.
 
 These are actions that would be sent from the client to the server.
 
-| Description | Action          | Payload  |
-| ----------- | --------------- | -------- |
-| send action | `submit_action` | `Action` |
+| Description     | Action          | Payload                            |
+| --------------- | --------------- | ---------------------------------- |
+| register client | `register`      | `{ id: string, strategy: string }` |
+| send action     | `submit_action` | `Action`                           |
