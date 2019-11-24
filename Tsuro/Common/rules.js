@@ -138,8 +138,25 @@ class RuleChecker {
       !boardState.getAvatar(playerId) && // The avatar has not been placed
       !boardState.getTile(coords) && // This tile space is empty
       !boardState.hasNeighboringTiles(coords) && // There are no neighbors
-      tile.getEndingPosition(position).direction !== position.direction
+      this.checkIsMoveOnBoard(coords, tile, position)
     ); // There is no loop back to the same side
+  }
+
+  /**
+   * Checks to see if a move would put the player off the edge of the board.
+   * @param {Coords} coords the coordinates to place the avatar at
+   * @param {Tile} tile the tile the avatar is attempting to be placed on
+   * @param {Position} position the position the avatar is attempting to be set as
+   * @returns {boolean} whether the tile at that coordinates would put the player off the edge of the board.
+   */
+  static checkIsMoveOnBoard(coords, tile, position) {
+    const coordsCopy = coords.copy();
+    try {
+      coordsCopy.moveOne(tile.getEndingPosition(position).direction);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 module.exports = RuleChecker;

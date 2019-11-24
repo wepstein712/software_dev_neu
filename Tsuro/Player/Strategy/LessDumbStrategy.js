@@ -7,6 +7,7 @@ const {
 } = require('../../Common');
 const { DIRECTIONS, DIRECTIONS_CLOCKWISE, PORTS } = require('../../Common/utils/constants');
 const Strategy = require('./Strategy');
+const Player = require('../Player');
 
 // Array for determining next valid position on tile
 const POSITIONS_CHECK = DIRECTIONS_CLOCKWISE.reduce(
@@ -139,6 +140,15 @@ class LessDumbStrategy extends Strategy {
   }
 
   /**
+   * Returns a random integer on the interval [0, max)
+   * @param {number} max the max value of the interval, non-inclusive.
+   * @returns {number} a random number on the interval.
+   */
+  static randomNum(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+  }
+
+  /**
    * Determines a player's initial action.
    *
    * @param {string} id the player's ID
@@ -148,17 +158,23 @@ class LessDumbStrategy extends Strategy {
    */
   static getInitialAction(id, hand, boardState) {
     const placementCoord = this.findFurthestStartingPosition(boardState);
-
-    const tile = hand[Math.floor(Math.random() * Math.floor(hand.length))].copy(
-      Math.floor(Math.random() * Math.floor(4))
-    );
     const startingPositions = this.findValidStartingPosition(
       placementCoord,
       boardState.getTiles().length
     );
 
-    const position =
-      startingPositions[Math.floor(Math.random() * Math.floor(startingPositions.length))];
+    const position = startingPositions[this.randomNum(startingPositions.length)];
+
+    const validStartingTiles = [];
+    hand.forEach(tile => {
+      for (let i = 0; i < 4; i++) {
+        const t = tile.copy(i);
+        if (RuleChecker.canPlaceAvatar(boardState, id, placementCoord, t, position)) {
+          validStartingTiles.push(t);
+        }
+      }
+    });
+    const tile = validStartingTiles[this.randomNum(validStartingTiles.length)];
 
     return new InitialAction(tile, placementCoord, position);
   }
@@ -176,17 +192,25 @@ class LessDumbStrategy extends Strategy {
     const avatar = boardState.getAvatar(id);
     const coords = avatar.coords.copy().moveOne(avatar.position.direction);
 
-    let bestTile = null;
+    const fakePlayer = new Player(id, id, null);
+    fakePlayer.hand = hand;
+
+    let bestTile = hand[0];
     let bestActionValue = -1;
     hand.forEach(tile => {
-      const actionValue = this.evaluatePosition(boardState, coords);
-      if (actionValue > bestActionValue) {
-        bestActionValue = actionValue;
-        bestTile = tile;
+      for (let i = 0; i < 4; i++) {
+        const t = new IntermediateAction(tile.copy(i), coords);
+        if (RuleChecker.canTakeAction(boardState, t, fakePlayer)) {
+          const actionValue = this.evaluatePosition(boardState, coords);
+          if (actionValue > bestActionValue) {
+            bestActionValue = actionValue;
+            bestTile = t.tile;
+          }
+        }
       }
     }, this);
 
-    return new IntermediateAction(bestTile.copy(Math.floor(Math.random() * Math.floor(4))), coords);
+    return new IntermediateAction(bestTile, coords);
   }
 }
 
