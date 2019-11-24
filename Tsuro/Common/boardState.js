@@ -146,6 +146,21 @@ class BoardState {
   }
 
   /**
+   * Gets the number of placed tiles adjacent to the given coordinates.
+   * @param {Coords} coords the coordinates of the tile
+   */
+  getNumberNeighboringTiles(coords) {
+    let count = 0;
+    DIRECTIONS_CLOCKWISE.forEach(direction => {
+      const tile = this._getNeighboringTile(coords, direction);
+      if (tile) {
+        count++;
+      }
+    });
+
+    return count;
+  }
+  /**
    * Checks whether a tile with the given coordinates has any
    * neighboring tiles.
    *

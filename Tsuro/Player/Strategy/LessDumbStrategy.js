@@ -4,13 +4,10 @@ const {
   IntermediateAction,
   Position,
   RuleChecker,
-  Board,
 } = require('../../Common');
 const { DIRECTIONS, DIRECTIONS_CLOCKWISE, PORTS } = require('../../Common/utils/constants');
 const Strategy = require('./Strategy');
 
-// Array for determining direction to check for next valid space
-const DIRECTIONS_CHECK = [DIRECTIONS.EAST, DIRECTIONS.SOUTH, DIRECTIONS.WEST, DIRECTIONS.NORTH];
 // Array for determining next valid position on tile
 const POSITIONS_CHECK = DIRECTIONS_CLOCKWISE.reduce(
   (acc, direction) => [
@@ -44,14 +41,25 @@ class LessDumbStrategy extends Strategy {
     return position || null;
   }
 
+  /**
+   * Computes the euclidean distane between two points in 2 dimensional space.
+   * @param {(number, number)} xy1 the coordinate on a cartesian plane of a point
+   * @param {(number, number)} xy2 the coordinate on a cartesian plane of a point
+   * @returns {number} the euclidean distance between the given 2 points.
+   */
   static euclideanDistance(xy1, xy2) {
     return Math.sqrt(Math.pow(xy1[0] - xy2[0], 2) + Math.pow(xy1[1] - xy2[1], 2));
   }
 
+  /**
+   * Computes the initial placement that will be furthest from all other tiles
+   * @param {BoardState} boardState the state of the current board.
+   * @returns {Coords} the coordinate of the calculated furthest starting position from other tiles.
+   */
   static findFurthestStartingPosition(boardState) {
     const tiles = boardState.getTiles();
-    const occupiedCoords = [];
-    const edgeCoords = [];
+    const occupiedCoords = []; //where tiles have already been placed
+    const edgeCoords = []; //tiles on the edge of the board
     for (let i = 0; i < tiles.length; i++) {
       for (let j = 0; j < tiles[0].length; j++) {
         if (i === 0 || i === tiles.length - 1 || j === 0 || j === tiles[0].length - 1) {
@@ -68,30 +76,68 @@ class LessDumbStrategy extends Strategy {
     edgeCoords.forEach(option => {
       let distance = 0;
       occupiedCoords.forEach(position => {
-        distance += this.euclideanDistance(option, position);
-      }, this);
+        const partialDistance = this.euclideanDistance(option, position);
+        if (partialDistance <= 2) {
+          distance = -100000;
+        }
+        distance += partialDistance;
+      });
       if (distance > furthestDistance || !furthestCoord) {
         furthestCoord = option;
         furthestDistance = distance;
       }
-    });
+    }, this);
 
     return new Coords(furthestCoord[0], furthestCoord[1]);
   }
 
+  /**
+   * Computes the value of a given set of coordinates on the board. Valuing being near fewer other tiles.
+   * @param {BoardState} boardState the state of the current board.
+   * @param {Coords} coords the coordinates being checked.
+   * @returns {number} reciprocal value of adjacent tiles. Fewer tiles means a higher score.
+   * @returns {null}  boardstate or coords is invalid, returns null.
+   */
   static evaluatePosition(boardState, coords) {
     if (coords && boardState) {
-      let neighbors = 0;
-      DIRECTIONS_CLOCKWISE.forEach(direction => {
-        if (boardState.getNeighboringTile(coords, direction)) {
-          neighbors++;
-        }
-      });
-      return 1 / (1 + neighbors);
+      return 1 / (1 + boardState.getNumberNeighboringTiles(coords));
     } else {
       return null;
     }
   }
+
+  /**
+   * Makes a list of positions that are valid given a coordinate that would lie on the outside of the board.
+   * @param {Coord} coord the place we are checking
+   * @param {*} maxSize the max size of the board.
+   * @returns {Position[]} the positions that would be valid to put as an initial placement.
+   */
+  static findValidStartingPosition(coord, maxSize) {
+    const validPositions = [];
+
+    if (coord.x === 0) {
+      validPositions.push(new Position(DIRECTIONS.WEST, 0));
+      validPositions.push(new Position(DIRECTIONS.WEST, 1));
+    }
+
+    if (coord.y === 0) {
+      validPositions.push(new Position(DIRECTIONS.NORTH, 0));
+      validPositions.push(new Position(DIRECTIONS.NORTH, 1));
+    }
+
+    if (coord.x === maxSize - 1) {
+      validPositions.push(new Position(DIRECTIONS.EAST, 0));
+      validPositions.push(new Position(DIRECTIONS.EAST, 1));
+    }
+
+    if (coord.y === maxSize - 1) {
+      validPositions.push(new Position(DIRECTIONS.SOUTH, 0));
+      validPositions.push(new Position(DIRECTIONS.SOUTH, 1));
+    }
+
+    return validPositions;
+  }
+
   /**
    * Determines a player's initial action.
    *
@@ -101,24 +147,20 @@ class LessDumbStrategy extends Strategy {
    * @returns {InitialAction} the determined initial action
    */
   static getInitialAction(id, hand, boardState) {
-    const tile = hand[2];
-    const coords = new Coords(0, 0);
+    const placementCoord = this.findFurthestStartingPosition(boardState);
 
-    let position = this._getPosition(id, tile, coords, boardState);
+    const tile = hand[Math.floor(Math.random() * Math.floor(hand.length))].copy(
+      Math.floor(Math.random() * Math.floor(4))
+    );
+    const startingPositions = this.findValidStartingPosition(
+      placementCoord,
+      boardState.getTiles().length
+    );
 
-    let directionIdx = 0;
-    while (!position && directionIdx < DIRECTIONS_CHECK.length) {
-      try {
-        coords.moveOne(DIRECTIONS_CHECK[directionIdx]);
-        position = this._getPosition(id, tile, coords, boardState);
-      } catch (err) {
-        directionIdx += 1;
-      }
-    }
-    if (directionIdx === DIRECTIONS_CHECK.length) {
-      throw 'Not enough valid spaces on the board';
-    }
-    return new InitialAction(tile, coords, position);
+    const position =
+      startingPositions[Math.floor(Math.random() * Math.floor(startingPositions.length))];
+
+    return new InitialAction(tile, placementCoord, position);
   }
 
   /**
@@ -137,13 +179,14 @@ class LessDumbStrategy extends Strategy {
     let bestTile = null;
     let bestActionValue = -1;
     hand.forEach(tile => {
-      const action = this.evaluatePosition(boardState, coords);
-      if (action > bestActionValue) {
-        bestActionValue = action;
+      const actionValue = this.evaluatePosition(boardState, coords);
+      if (actionValue > bestActionValue) {
+        bestActionValue = actionValue;
         bestTile = tile;
       }
     }, this);
-    return new IntermediateAction(bestTile, coords);
+
+    return new IntermediateAction(bestTile.copy(Math.floor(Math.random() * Math.floor(4))), coords);
   }
 }
 
