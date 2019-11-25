@@ -52,7 +52,6 @@ class Player extends BasePlayer {
    */
   setColor(id, color) {
     this.colors[id] = color;
-    // console.log(this.colors);
   }
 
   /**
@@ -143,11 +142,9 @@ class Player extends BasePlayer {
    * separated by winner place
    * @param {string[]} losers the player IDs of the losers of the game
    */
+  // eslint-disable-next-line no-unused-vars
   endGame(winners, losers) {
     this.gameStatus = GAME_STATUS.GAME_OVER;
-    if (this._shouldPrintResults) {
-      console.log(winners, losers);
-    }
   }
 }
 

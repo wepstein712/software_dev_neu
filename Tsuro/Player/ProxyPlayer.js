@@ -164,8 +164,11 @@ class ProxyPlayer extends BasePlayer {
           }
         };
         this._client.once('data', onData);
+        // TODO: maybe add end listener too?
+        console.log(`prompting ${this.id}`);
         this._sendMessage(MESSAGE_ACTIONS.PROMPT_FOR_ACTION, isInitial);
       });
+      console.log(`received ${this.id}`);
       return action;
     } catch (messageAction) {
       this._kick(messageAction);

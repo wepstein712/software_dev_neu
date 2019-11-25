@@ -59,6 +59,8 @@ exports.MESSAGE_ACTIONS = {
   SEND_ACTION: 'submit_action',
   INVALID_JSON: 'invalid_json',
   UNKNOWN_ACTION: 'unknown_action',
+  INVALID_ID: 'invalid_id',
+  UNKNOWN_STRAT: 'unknown_strat',
 };
 
 exports.PORTS = {

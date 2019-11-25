@@ -1,5 +1,6 @@
 const { createServer } = require('net');
 const Logger = require('./Logger');
+const Validation = require('./Validation');
 const { Referee } = require('../Admin');
 const ProxyPlayer = require('../Player/ProxyPlayer');
 const Message = require('../Common/message');
@@ -203,16 +204,28 @@ class Server {
     const { client } = this.clients[sessionId];
     const { id, strategy } = payload;
 
-    // TODO: send explicit duplicate ID or invalid strategy messages
-    const player = new ProxyPlayer(id, id, strategy, client, this._getKickCallback(sessionId));
-    const color = this.referee.addPlayer(player);
+    if (!Validation.testName(id)) {
+      this._endClientSession(sessionId, MESSAGE_ACTIONS.INVALID_ID, 'Alphanumeric names only.');
+    } else if (!Validation.testStrategy(strategy)) {
+      this._endClientSession(sessionId, MESSAGE_ACTIONS.UNKNOWN_STRAT, 'Strategy does not exist.');
+    } else {
+      const uniqueId = `${id}#${sessionId}`;
+      const player = new ProxyPlayer(
+        uniqueId,
+        uniqueId,
+        strategy,
+        client,
+        this._getKickCallback(sessionId)
+      );
+      const color = this.referee.addPlayer(player);
 
-    this.clients[sessionId].id = id;
+      this.clients[sessionId].id = uniqueId;
 
-    this.logger.log(id, '>>', 'create player', id, 'with strategy', strategy);
-    this.logger.log(id, '<<', 'set color to', color);
+      this.logger.log(id, '>>', 'create player', id, 'with strategy', strategy);
+      this.logger.log(id, '<<', 'set color to', color);
 
-    this._checkForGameStart();
+      this._checkForGameStart();
+    }
   }
 
   /**

@@ -1,4 +1,5 @@
 const { Socket } = require('net');
+const Validation = require('./Validation');
 const Player = require('../Player/Player');
 const Message = require('../Common/message');
 const { BoardState, SimpleTile } = require('../Common');
@@ -25,10 +26,19 @@ class Client {
     this.port = port;
     this.client = null;
 
+    try {
+      this._validateName(name);
+      this._validateStrategy(strategy);
+    } catch (reason) {
+      this._handleDenyEntry(reason);
+      process.exit(0);
+    }
+
     this.name = name;
     this.strategy = strategy;
     this.player = new Player(name, name, strategy);
 
+    this._hasGameStarted = false;
     this._hasGameEnded = false;
 
     this.handlers = {
@@ -43,6 +53,8 @@ class Client {
       [MESSAGE_ACTIONS.DENY_ENTRY]: this._handleDenyEntry,
       [MESSAGE_ACTIONS.INVALID_JSON]: this._handleInvalidJson,
       [MESSAGE_ACTIONS.UNKNOWN_ACTION]: this._handleUnknownAction,
+      [MESSAGE_ACTIONS.INVALID_ID]: this._handleInvalidId,
+      [MESSAGE_ACTIONS.UNKNOWN_STRAT]: this._handleUnknownStrat,
     };
 
     this.errorHandlers = {
@@ -51,6 +63,32 @@ class Client {
 
     this._createClient();
     this._connectToServer();
+  }
+
+  /**
+   * @private
+   * Validates whether the name passes an alphanumeric test. Throws
+   * an error with the reason if not.
+   *
+   * @param {string} name the desired name of the player's client
+   */
+  _validateName(name) {
+    if (!Validation.testName(name)) {
+      throw 'Alphanumeric names only.';
+    }
+  }
+
+  /**
+   * @private
+   * Validates whether the strategy is valid. Throws an error with the
+   * reason if not.
+   *
+   * @param {string} strategy the desired strategy of the player's client
+   */
+  _validateStrategy(strategy) {
+    if (!Validation.testStrategy(strategy)) {
+      throw 'Strategy does not exist.';
+    }
   }
 
   /**
@@ -71,7 +109,9 @@ class Client {
    */
   _sendMessage(action, payload) {
     const message = new Message(action, payload);
-    this.client.write(message.toString());
+    setTimeout(() => {
+      this.client.write(message.toString());
+    }, 1000);
   }
 
   /**
@@ -108,6 +148,14 @@ class Client {
    */
   _logKickError(reason) {
     this._logError('You have been kicked from the game.', reason);
+  }
+
+  _handleUnknownStrat(reason) {
+    this._handleDenyEntry(reason);
+  }
+
+  _handleInvalidId(reason) {
+    this._handleDenyEntry(reason);
   }
 
   /**
@@ -199,6 +247,7 @@ class Client {
    * initial avatar positions
    */
   _handleUpdateState(payload) {
+    this._hasGameStarted = true;
     this.player.updateState(BoardState.fromJson(payload));
   }
 
@@ -294,7 +343,7 @@ class Client {
    * if such is the cause of the session end.
    */
   _onServerEnd() {
-    if (!this._hasGameEnded) {
+    if (this._hasGameStarted && !this._hasGameEnded) {
       this._logUnexpectedError('The server has gone down.');
     }
     this._endSession();
@@ -324,6 +373,7 @@ class Client {
       handler.bind(this)();
     } else {
       this._logUnexpectedError(`Unknown error (${code}) has occurred.`);
+      // TODO: remove error print
       console.log(error);
     }
   }
