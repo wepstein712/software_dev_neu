@@ -8,6 +8,11 @@ exports.COLORS = {
   WHITE: 'white',
 };
 
+exports.DEFAULT_CONN = {
+  IP_ADDRESS: '127.0.0.1',
+  PORT: 8000,
+};
+
 const DIRECTIONS = {
   NORTH: 'north',
   EAST: 'east',
@@ -52,6 +57,8 @@ exports.MESSAGE_ACTIONS = {
   DENY_ENTRY: 'fail_conn',
   REGISTER_CLIENT: 'register',
   SEND_ACTION: 'submit_action',
+  INVALID_JSON: 'invalid_json',
+  UNKNOWN_ACTION: 'unknown_action',
 };
 
 exports.PORTS = {

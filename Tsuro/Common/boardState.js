@@ -1,4 +1,4 @@
-const { Avatar, Tile } = require('.');
+const { Avatar, SimpleTile, Tile } = require('.');
 const { getEmptyBoardArray } = require('./utils');
 const { BOARD_SIZE, DIRECTIONS_CLOCKWISE } = require('./utils/constants');
 require('./utils/polyfills');
@@ -240,6 +240,24 @@ class BoardState {
       avatars,
       initialAvatarHashes: this._initialAvatarHashes,
     };
+  }
+
+  static fromJson(payload) {
+    const { tiles, avatars, initialAvatarHashes } = payload;
+    const bsTiles = tiles.map(row => row.map(tile => (tile ? new SimpleTile(tile) : null)));
+    const bsAvatars = avatars.reduce(
+      (acc, avatar) =>
+        Object.assign(acc, {
+          [avatar.id]: Avatar.fromJson(avatar),
+        }),
+      {}
+    );
+    const newState = {
+      _tiles: bsTiles,
+      _avatars: bsAvatars,
+      _initialAvatarHashed: initialAvatarHashes,
+    };
+    return new BoardState(newState);
   }
 }
 

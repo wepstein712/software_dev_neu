@@ -7,6 +7,7 @@ const STRATEGY_MAP = {
 
 class BasePlayer {
   /**
+   * @constructor
    * Creates a new Player.
    *
    * @param {string} id the unique ID of the player
@@ -18,7 +19,7 @@ class BasePlayer {
     this.id = id;
     this.name = name;
 
-    const chosenStrategy = STRATEGY_MAP[strategy];
+    const chosenStrategy = STRATEGY_MAP[strategy.toLocaleLowerCase()];
     if (!chosenStrategy) {
       throw 'Invalid strategy';
     }
@@ -80,6 +81,7 @@ class BasePlayer {
   }
 
   /**
+   * @async
    * Gets either a player's initial or intermediate action, as determined
    * by the strategy.
    *
@@ -87,7 +89,7 @@ class BasePlayer {
    * should be the player's initial action
    */
   // eslint-disable-next-line no-unused-vars
-  getAction(isInitial = false) {
+  async getAction(isInitial = false) {
     throw 'Implement!';
   }
 
@@ -98,6 +100,11 @@ class BasePlayer {
     throw 'Implement!';
   }
 
+  /**
+   * Informs the player that they have lost in the game.
+   *
+   * @param {boolean} forLegalMove whether the player lost for a legal move
+   */
   // eslint-disable-next-line no-unused-vars
   lose(forLegalMove) {
     throw 'Implement!';

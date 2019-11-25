@@ -104,7 +104,7 @@ class Coords {
   isEqualTo(coords) {
     return this.x === coords.x && this.y === coords.y;
   }
-  
+
   /**
    * @private
    * Updates the hash for this Coords when the x and/or
@@ -112,6 +112,18 @@ class Coords {
    */
   _updateHash() {
     this._hash = `${this.x}${this.y}`;
+  }
+
+  toJson() {
+    return {
+      x: this.x,
+      y: this.y,
+    };
+  }
+
+  static fromJson(payload) {
+    const { x, y } = payload;
+    return new Coords(x, y);
   }
 }
 

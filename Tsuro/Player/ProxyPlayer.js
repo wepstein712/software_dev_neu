@@ -1,33 +1,66 @@
 const BasePlayer = require('./BasePlayer');
 const Message = require('../Common/message');
-const { Coords, InitialAction, IntermediateAction, Position, SimpleTile } = require('../Common');
+const { InitialAction, IntermediateAction } = require('../Common');
 const { MESSAGE_ACTIONS } = require('../Common/utils/constants');
 
 class ProxyPlayer extends BasePlayer {
   /**
-   * Creates a new Player.
+   * @constructor
+   * Creates a new ProxyPlayer to be used to communicate between the
+   * server and the given client.
    *
    * @param {string} id the unique ID of the player
    * @param {string} name the name of the player
    * @param {string} strategy the key for the strategy implementation to
    * be used to make moves for the player
+   * @param {net.Socket} client the player's corresponding client
+   * @param {function} kickClient a callback function used to kick the
+   * client from the server
    */
-  constructor(id, name, strategy, client) {
+  constructor(id, name, strategy, client, kickClient) {
     super(id, name, strategy);
     this.color = null;
     this.hand = [];
-    this.client = client;
-  }
 
-  _sendMessage(action, payload) {
-    const message = new Message(action, payload);
-    this.client.write(message.toString());
+    this._client = client;
+    this._kickClient = kickClient;
+    this._wasKicked = false;
   }
 
   /**
-   * Updates the game status to either be `Current Turn` if the referee
-   * is waiting on the player for action, or `Waiting` if the player's
-   * turn is now over.
+   * @private
+   * Kicks the client from the server, using the `kickClient` callback function
+   * passed in the constructor. Marks the player as kicked to prevent further
+   * messages from being sent.
+   *
+   * @param {string} action the action identifier for the kick message
+   * @param {any} [payload] the payload of the kick message
+   */
+  _kick(action, payload) {
+    if (!this._wasKicked) {
+      this._kickClient(action, payload);
+      this._wasKicked = true;
+    }
+  }
+
+  /**
+   * @private
+   * Helper function for sending messages to the client. This will not send
+   * messages to clients that have been kicked.
+   *
+   * @param {string} action the action identifier for the message
+   * @param {any} [payload] the payload of the message
+   */
+  _sendMessage(action, payload) {
+    if (!this._wasKicked) {
+      const message = new Message(action, payload);
+      this._client.write(message.toString());
+    }
+  }
+
+  /**
+   * Sends the client a `TURN_STATUS` message, with the current turn status
+   * as payload.
    *
    * @param {boolean} isCurrentTurn whether it's currently the player's turn
    */
@@ -36,8 +69,9 @@ class ProxyPlayer extends BasePlayer {
   }
 
   /**
-   * Updates the player's personal board state, and gives them
-   * the most recent view of the board.
+   * Updates the player's personal board state, and gives them the most recent
+   * view of the board. Sends the client an `UPDATE_STATE` message, with the
+   * JSON representation of the state as payload.
    *
    * @param {BoardState} boardState the new BoardState given by the referee
    */
@@ -48,6 +82,7 @@ class ProxyPlayer extends BasePlayer {
 
   /**
    * Sets the player of the given ID's color to the referee-assigned color.
+   * Sends the client a `SET_COLOR` message, with the id and color as payload.
    *
    * @param {string} id the id of the player
    * @param {string} color the player's avatar's color
@@ -69,10 +104,11 @@ class ProxyPlayer extends BasePlayer {
   }
 
   /**
-   * Receives a hand given by the referee, and updated the current
-   * player hand.
+   * Receives a hand given by the referee, and updates the current player hand.
+   * Sends the client a `DEAL_HAND` message, with the tileIndices of the hand
+   * as payload.
    *
-   * @param {Tile[]} hand the new array (hand) of tiles
+   * @param {SimpleTile[]} hand the new array (hand) of tiles
    */
   receiveHand(hand) {
     this.hand = hand;
@@ -80,66 +116,89 @@ class ProxyPlayer extends BasePlayer {
     this._sendMessage(MESSAGE_ACTIONS.DEAL_HAND, handIndices);
   }
 
+  /**
+   * @private
+   * Converts a given payload from JSON to the respective Action object.
+   *
+   * @param {object} payload the payload of the client's message
+   * @param {boolean} isInitial whether the action in the payload is an
+   * initial action
+   */
   _getActionFromPayload(payload, isInitial) {
-    const { tile, coords, position } = payload;
-    const aTile = new SimpleTile(tile);
-    const aCoords = new Coords(coords.x, coords.y);
-
     if (isInitial) {
-      const aPosition = new Position(position.direction, position.port);
-      return new InitialAction(aTile, aCoords, aPosition);
+      return InitialAction.fromJson(payload);
     }
-    return new IntermediateAction(aTile, aCoords);
+    return IntermediateAction.fromJson(payload);
   }
 
   /**
-   * Gets either a player's initial or intermediate action, as determined
-   * by the strategy.
+   * @async
+   * Sends the client a `PROMPT_FOR_ACTION` message, with whether the
+   * action is initial as payload. Then, opens a one-time `data` event
+   * handler for receiving the player's respective action.
+   *
+   * If the message received is malformed JSON or uses an unknown
+   * message action, the player's client will be kicked and removed
+   * from game and error will be thrown.
    *
    * @param {boolean} [isInitial=false] whether the action to retrieve
    * should be the player's initial action
+   * @returns {Action} the player's desired action
    */
-  getAction(isInitial = false) {
-    return new Promise(resolve => {
-      const onData = data => {
-        const text = data.toString().trim();
-        try {
-          const message = JSON.parse(text.split('\n')[0]);
-          const { action, payload } = message;
-          if (action !== MESSAGE_ACTIONS.SEND_ACTION) {
-            // TODO: resolve unknown action, should we kick them?
-            console.log('unknown action');
-          } else {
-            resolve(this._getActionFromPayload(payload, isInitial));
+  async getAction(isInitial = false) {
+    try {
+      const action = await new Promise((resolve, reject) => {
+        const onData = data => {
+          const text = data.toString().trim();
+          try {
+            const message = JSON.parse(text.split('\n')[0]);
+            const { action, payload } = message;
+            if (action !== MESSAGE_ACTIONS.SEND_ACTION) {
+              reject(MESSAGE_ACTIONS.UNKNOWN_ACTION);
+            } else {
+              resolve(this._getActionFromPayload(payload, isInitial));
+            }
+          } catch (err) {
+            reject(MESSAGE_ACTIONS.INVALID_JSON);
           }
-        } catch (err) {
-          // TODO: resolve invalid json, should we kick them?
-          console.log('invalid JSON');
-        }
-      };
-      this.client.once('data', onData);
-      this._sendMessage(MESSAGE_ACTIONS.PROMPT_FOR_ACTION, isInitial);
-    });
+        };
+        this._client.once('data', onData);
+        this._sendMessage(MESSAGE_ACTIONS.PROMPT_FOR_ACTION, isInitial);
+      });
+      return action;
+    } catch (messageAction) {
+      this._kick(messageAction);
+      throw 'Client kicked';
+    }
   }
 
   /**
-   * Removes all tiles from the current hand.
+   * Removes all tiles from the current hand. Send the client a
+   * `CLEAR_HAND` message.
    */
   clearHand() {
     this.hand = [];
     this._sendMessage(MESSAGE_ACTIONS.CLEAR_HAND);
   }
 
+  /**
+   * Send the client a `REMOVE_PLAYER` message, with the move legality
+   * as payload.
+   *
+   * @param {boolean} forLegalMove whether the player lost for a legal
+   * move
+   */
   lose(forLegalMove) {
     this._sendMessage(MESSAGE_ACTIONS.REMOVE_PLAYER, forLegalMove);
   }
 
   /**
-   * Sets the `gameStatus` to `GameOver`. This signals to the player
-   * that the game is now over, and which player(s) won.
+   * Sends the client a `GAME_OVER` message, with the given winners
+   * and losers as payload.
    *
-   * @param {string[]} winners the player ID(s) of the winner(s)
-   * of the game
+   * @param {string[][]} winners the player IDs of the winners of the game,
+   * separated by winner place
+   * @param {string[]} losers the player IDs of the losers of the game
    */
   endGame(winners, losers) {
     this._sendMessage(MESSAGE_ACTIONS.GAME_OVER, { winners, losers });

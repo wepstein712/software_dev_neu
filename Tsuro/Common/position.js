@@ -86,6 +86,18 @@ class Position {
   _updateHash() {
     this._hash = `${this.direction}${this.port}`;
   }
+
+  toJson() {
+    return {
+      direction: this.direction,
+      port: this.port,
+    };
+  }
+
+  static fromJson(payload) {
+    const { direction, port } = payload;
+    return new Position(direction, port);
+  }
 }
 
 module.exports = Position;

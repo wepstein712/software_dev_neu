@@ -14,6 +14,7 @@ class Referee {
     this.currentPlayerIdx = -1;
     this.deckIdx = 0;
     this.currentTurn = 0;
+    this._hasGameStarted = false;
 
     this.playerMap = {};
     this.currentPlayers = {};
@@ -94,7 +95,7 @@ class Referee {
   }
 
   getPlayers() {
-    return this.playerIds.slice();
+    return Object.keys(this.currentPlayers);
   }
 
   /**
@@ -238,29 +239,40 @@ class Referee {
   }
 
   /**
-   * @private
    * Removes a player from play.
    *
-   * @param {Player} player the player to remove from play
+   * @param {string} playerId the ID of the player to remove from play
    * @param {boolean} [fromLegalMove=true] will add to rejected players if false
+   * @param {boolean} [permanent=false] whether the player should be removed
+   * permanently from the game (e.g.: client has disconnected before game started)
    */
-  removePlayer(player, fromLegalMove = true) {
-    const { id } = player;
-    delete this.currentPlayers[id];
+  removePlayer(playerId, fromLegalMove = true, permanent = false) {
+    if (this.currentPlayers[playerId]) {
+      delete this.currentPlayers[playerId];
 
-    if (fromLegalMove) {
-      this.removedPlayersForTurn[this.currentTurn] = [
-        ...(this.removedPlayersForTurn[this.currentTurn] || []),
-        id,
-      ];
-    } else {
-      this.rejectedPlayers.push(id);
+      if (permanent && !this._hasGameStarted) {
+        const playerIndex = this.playerIds.findIndex(id => id === playerId);
+        this.playerIds.splice(playerIndex, 1);
+        delete this.playerMap[playerId];
+
+        // alert observer and other players of permanent player remove
+      } else {
+        if (fromLegalMove) {
+          this.removedPlayersForTurn[this.currentTurn] = [
+            ...(this.removedPlayersForTurn[this.currentTurn] || []),
+            playerId,
+          ];
+        } else {
+          this.rejectedPlayers.push(playerId);
+        }
+
+        const player = this.playerMap[playerId];
+        player.lose(fromLegalMove);
+        this._updateObservers(observer => {
+          observer.removePlayer(playerId);
+        });
+      }
     }
-
-    player.lose(fromLegalMove);
-    this._updateObservers(observer => {
-      observer.removePlayer(id);
-    });
   }
 
   /**
@@ -278,7 +290,7 @@ class Referee {
       try {
         this.board.placeInitialTileAvatar(player, tile, coords, position);
       } catch (err) {
-        this.removePlayer(player);
+        this.removePlayer(player.id);
       }
     } else {
       this.board.placeTile(tile, coords);
@@ -303,14 +315,18 @@ class Referee {
   async _promptPlayerForAction(player, isInitial = false) {
     const handSize = isInitial ? 3 : 2;
     const boardState = this._startPlayerTurn(player, handSize);
-    const action = await player.getAction(isInitial);
-    const isLegal = this._checkForActionLegality(boardState, player, action, isInitial);
-    const isValid = this._checkForActionValidity(boardState, player, action, isInitial);
-    if (!isValid || !isLegal) {
-      this.removePlayer(player, isLegal);
-    }
-    if (isLegal) {
-      this._usePlayerAction(player, action, isInitial);
+    try {
+      const action = await player.getAction(isInitial);
+      const isLegal = this._checkForActionLegality(boardState, player, action, isInitial);
+      const isValid = this._checkForActionValidity(boardState, player, action, isInitial);
+      if (!isValid || !isLegal) {
+        this.removePlayer(player.id, isLegal);
+      }
+      if (isLegal) {
+        this._usePlayerAction(player, action, isInitial);
+      }
+    } catch (err) {
+      this.removePlayer(player.id, false);
     }
   }
 
@@ -333,7 +349,7 @@ class Referee {
       } else if (this._canPlayerMove(player)) {
         await this._promptPlayerForAction(player);
       } else {
-        this.removePlayer(player);
+        this.removePlayer(player.id);
       }
     }
   }
@@ -396,15 +412,19 @@ class Referee {
    * be notified of game over and who won.
    */
   async runGame() {
-    if (this.playerIds.length <= 1) {
-      throw 'At least two players are required to game.';
-    }
+    if (!this._hasGameStarted) {
+      if (this.playerIds.length <= 1) {
+        throw 'At least two players are required to game.';
+      }
 
-    while (!this.isGameOver()) {
-      await this._nextPlayer();
-    }
+      this._hasGameStarted = true;
 
-    this._notifyPlayersOfGameOver();
+      while (!this.isGameOver()) {
+        await this._nextPlayer();
+      }
+
+      this._notifyPlayersOfGameOver();
+    }
   }
 }
 

@@ -4,6 +4,7 @@ const { GAME_STATUS } = require('../Common/utils/constants');
 
 class Player extends BasePlayer {
   /**
+   * @constructor
    * Creates a new Player, with an empty hand. Sets `gameStatus`
    * to `Waiting` and the `boardState` to an empty board.
    *
@@ -74,13 +75,14 @@ class Player extends BasePlayer {
   }
 
   /**
+   * @async
    * Gets either a player's initial or intermediate action, as determined
    * by the strategy.
    *
    * @param {boolean} [isInitial=false] whether the action to retrieve
    * should be the player's initial action
    */
-  getAction(isInitial = false) {
+  async getAction(isInitial = false) {
     if (isInitial) {
       return this._getInitialAction();
     }
@@ -114,6 +116,11 @@ class Player extends BasePlayer {
     this.hand = [];
   }
 
+  /**
+   * Informs the player that they have lost in the game.
+   *
+   * @param {boolean} forLegalMove whether the player lost for a legal move
+   */
   // eslint-disable-next-line no-unused-vars
   lose(forLegalMove) {
     // TODO: stub

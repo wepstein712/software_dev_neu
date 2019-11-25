@@ -1,3 +1,4 @@
+const { Coords, Position } = require('.');
 const RenderUtils = require('./renderUtils');
 
 class Avatar {
@@ -175,6 +176,18 @@ class Avatar {
       collided: this._collided,
       exited: this._exited,
     };
+  }
+
+  static fromJson(payload) {
+    const { id, color, coords, position, collided, exited } = payload;
+    return new Avatar(
+      id,
+      color,
+      Coords.fromJson(coords),
+      Position.fromJson(position),
+      collided,
+      exited
+    );
   }
 }
 
