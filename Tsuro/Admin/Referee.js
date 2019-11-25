@@ -175,7 +175,7 @@ class Referee {
    *
    * @param {BoardState} boardState the current state of the board
    * @param {Player} player the player to check legality for
-   * @param {Action} action the action to check legality for
+   * @param {BaseAction} action the action to check legality for
    * @param {boolean} [isInitial=false] whether the given action is
    * initial or intermediate
    * @returns {boolean} whether the given action is legal for the
@@ -206,7 +206,7 @@ class Referee {
    *
    * @param {BoardState} boardState the current state of the board
    * @param {Player} player the player to check validity for
-   * @param {Action} action the action to check validity for
+   * @param {BaseAction} action the action to check validity for
    * @param {boolean} [isInitial=false] whether the given action is
    * initial or intermediate
    * @returns {boolean} whether the given action is valid for the
@@ -244,7 +244,7 @@ class Referee {
    * @param {string} playerId the ID of the player to remove from play
    * @param {boolean} [fromLegalMove=true] will add to rejected players if false
    * @param {boolean} [permanent=false] whether the player should be removed
-   * permanently from the game (e.g.: client has disconnected before game started)
+   * permanently from the game (e.g.: client has disconnected from game)
    */
   removePlayer(playerId, fromLegalMove = true, permanent = false) {
     if (this.currentPlayers[playerId]) {
@@ -281,7 +281,7 @@ class Referee {
    * avatar if the action is initial. Then ends player's turn.
    *
    * @param {Player} player the player to use the action for
-   * @param {Action} action the action to use
+   * @param {BaseAction} action the action to use
    * @param {boolean} [isInitial=false] whether the action is initial or intermediate
    */
   _usePlayerAction(player, action, isInitial = false) {

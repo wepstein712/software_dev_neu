@@ -91,7 +91,7 @@ class Observer {
    * This also updates the last hand and player ID to use the currently
    * set ones (in anticipation of the next turn).
    *
-   * @param {Action} lastAction the last action used
+   * @param {BaseAction} lastAction the last action used
    */
   updateLastAction(lastAction) {
     this._lastAction = lastAction;

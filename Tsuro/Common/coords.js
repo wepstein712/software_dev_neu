@@ -114,6 +114,12 @@ class Coords {
     this._hash = `${this.x}${this.y}`;
   }
 
+  /**
+   * Converts this Coords object into JSON to be sent over
+   * a TCP server connection.
+   *
+   * @returns {object} a JSON-ified Coords object
+   */
   toJson() {
     return {
       x: this.x,
@@ -121,8 +127,15 @@ class Coords {
     };
   }
 
-  static fromJson(payload) {
-    const { x, y } = payload;
+  /**
+   * @static
+   * Creates a new Coords object from the JSON-ified version.
+   *
+   * @param {object} json the JSON-ified Coords object, as
+   * created by the `toJson` method.
+   */
+  static fromJson(json) {
+    const { x, y } = json;
     return new Coords(x, y);
   }
 }

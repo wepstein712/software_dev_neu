@@ -81,6 +81,7 @@ class Player extends BasePlayer {
    *
    * @param {boolean} [isInitial=false] whether the action to retrieve
    * should be the player's initial action
+   * @returns {InitialAction|IntermediateAction} the respective Action
    */
   async getAction(isInitial = false) {
     if (isInitial) {
@@ -138,8 +139,9 @@ class Player extends BasePlayer {
    * Sets the `gameStatus` to `GameOver`. This signals to the player
    * that the game is now over, and which player(s) won.
    *
-   * @param {string[]} winners the player ID(s) of the winner(s)
-   * of the game
+   * @param {string[][]} winners the player IDs of the winners of the game,
+   * separated by winner place
+   * @param {string[]} losers the player IDs of the losers of the game
    */
   endGame(winners, losers) {
     this.gameStatus = GAME_STATUS.GAME_OVER;

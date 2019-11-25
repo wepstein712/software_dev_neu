@@ -114,8 +114,9 @@ class BasePlayer {
    * Sets the `gameStatus` to `GameOver`. This signals to the player
    * that the game is now over, and which player(s) won.
    *
-   * @param {string[]} winners the player ID(s) of the winner(s)
-   * of the game
+   * @param {string[][]} winners the player IDs of the winners of the game,
+   * separated by winner place
+   * @param {string[]} losers the player IDs of the losers of the game
    */
   // eslint-disable-next-line no-unused-vars
   endGame(winners, losers) {

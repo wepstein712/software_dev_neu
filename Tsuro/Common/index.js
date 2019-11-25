@@ -11,6 +11,6 @@ exports.BoardState = require('./boardState');
 exports.Board = require('./board');
 exports.RuleChecker = require('./rules');
 
-const { InitialAction, IntermediateAction } = require('./action');
-exports.InitialAction = InitialAction;
-exports.IntermediateAction = IntermediateAction;
+exports.BaseAction = require('./BaseAction');
+exports.InitialAction = require('./InitialAction');
+exports.IntermediateAction = require('./IntermediateAction');

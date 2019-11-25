@@ -27,12 +27,16 @@ class Server {
    * @param {number} [port=8000] the port to host the server at
    */
   constructor(ipAddress = DEFAULT_CONN.IP_ADDRESS, port = DEFAULT_CONN.PORT) {
-    this.logger = new Logger();
     this.ipAddress = ipAddress;
     this.port = port;
+    this.server = null;
     this.clients = {};
 
+    this.logger = new Logger();
     this.referee = new Referee();
+
+    this._standbyTimeout = null;
+    this._hasGameStarted = false;
 
     this.handlers = {
       [MESSAGE_ACTIONS.REGISTER_CLIENT]: this._handleRegisterClient,
@@ -42,8 +46,6 @@ class Server {
       [CONN_ERRORS.CLIENT_DISCONNECTED]: this._handleClientDisconnect,
     };
 
-    this._standbyTimeout = null;
-    this._hasGameStarted = false;
     this._createServer();
   }
 

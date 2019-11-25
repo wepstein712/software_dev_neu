@@ -232,6 +232,12 @@ class BoardState {
     });
   }
 
+  /**
+   * Converts this BoardState object into JSON to be sent over
+   * a TCP server connection.
+   *
+   * @returns {object} a JSON-ified BoardState object
+   */
   toJson() {
     const tiles = this._tiles.map(row => row.map(tile => (tile ? tile.index : null)));
     const avatars = this.getAvatars().map(avatar => avatar.toJson());
@@ -242,8 +248,15 @@ class BoardState {
     };
   }
 
-  static fromJson(payload) {
-    const { tiles, avatars, initialAvatarHashes } = payload;
+  /**
+   * @static
+   * Creates a new BoardState object from the JSON-ified version.
+   *
+   * @param {object} json the JSON-ified BoardState object, as
+   * created by the `toJson` method.
+   */
+  static fromJson(json) {
+    const { tiles, avatars, initialAvatarHashes } = json;
     const bsTiles = tiles.map(row => row.map(tile => (tile ? new SimpleTile(tile) : null)));
     const bsAvatars = avatars.reduce(
       (acc, avatar) =>

@@ -123,6 +123,7 @@ class ProxyPlayer extends BasePlayer {
    * @param {object} payload the payload of the client's message
    * @param {boolean} isInitial whether the action in the payload is an
    * initial action
+   * @returns {InitialAction|IntermediateAction} the respective Action
    */
   _getActionFromPayload(payload, isInitial) {
     if (isInitial) {
@@ -143,7 +144,7 @@ class ProxyPlayer extends BasePlayer {
    *
    * @param {boolean} [isInitial=false] whether the action to retrieve
    * should be the player's initial action
-   * @returns {Action} the player's desired action
+   * @returns {BaseAction} the player's desired action
    */
   async getAction(isInitial = false) {
     try {
