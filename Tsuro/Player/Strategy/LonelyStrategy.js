@@ -12,39 +12,44 @@ const Player = require('../Player');
 class LonelyStrategy extends Strategy {
   /**
    * @private
-   * Computes the initial placement that will be furthest from all other tiles
+   * Computes the initial placement that will be furthest from all other tiles. Does this by valuing the
+   * largest summed distances from all occupied spaces for each occupied tile.
    *
    * @param {BoardState} boardState the state of the current board.
    * @returns {Coords} the coordinate of the calculated furthest starting position from other tiles.
    */
   static _findFurthestStartingPosition(boardState) {
-    const tiles = boardState.getTiles();
-    const occupiedCoords = []; // Where tiles have already been placed [x,y]
-    const edgeCoords = []; // Tiles on the edge of the board [x,y]
+    const occupiedCoords = []; // Coords of where tiles have already been placed
+    const borderCoords = []; // Coords of tiles on the border of the board we can place on
+
+    // Traverse the board and push all border coords. Push all occupied border coords as well
     for (let i = 0; i < BOARD_SIZE; i++) {
       for (let j = 0; j < BOARD_SIZE; j++) {
+        const coord = new Coords(i, j);
         if (i === 0 || i === BOARD_SIZE - 1 || j === 0 || j === BOARD_SIZE - 1) {
-          edgeCoords.push(new Coords(i, j));
-        }
-        if (tiles[i][j]) {
-          occupiedCoords.push(new Coords(i, j));
+          if (boardState.getTile(coord)) {
+            // There is a tile here, record it
+            occupiedCoords.push(coord);
+          } else {
+            borderCoords.push(coord);
+          }
         }
       }
     }
 
     let furthestDistance = 0;
     let furthestCoord = null;
-    edgeCoords.forEach(edgeCoord => {
+    // Consider each border coord to each occupied coord
+    borderCoords.forEach(borderCoord => {
       let distance = 0;
+      // Sum the distances between the border coord and all occupied coords
       occupiedCoords.forEach(occupiedCoord => {
-        const partialDistance = Coords.euclideanDistance(edgeCoord, occupiedCoord);
-        if (partialDistance <= 2) {
-          distance = -100000;
-        }
+        const partialDistance = Coords.euclideanDistance(borderCoord, occupiedCoord);
         distance += partialDistance;
       });
+      // Keep track of and return the border coord with the highest summed distance from all occupied tiles
       if (distance > furthestDistance || !furthestCoord) {
-        furthestCoord = edgeCoord;
+        furthestCoord = borderCoord;
         furthestDistance = distance;
       }
     });
