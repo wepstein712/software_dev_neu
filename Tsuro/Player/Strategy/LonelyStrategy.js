@@ -119,8 +119,8 @@ class LonelyStrategy extends Strategy {
   }
 
   /**
-   * Determines a player's initial action. Use's the rulechecker to see which tiles and rotations are safe
-   * and randomly selects from those options.
+   * Determines a player's initial action, favoring options furthest from other players.
+   * Use's the RuleChecker to see which tiles and rotations are safe and randomly selects from those options.
    *
    * @param {string} id the player's ID
    * @param {Tile[]} hand the player's current hand of tiles
@@ -130,11 +130,14 @@ class LonelyStrategy extends Strategy {
   static getInitialAction(id, hand, boardState) {
     const placementCoord = this._findFurthestStartingPosition(boardState); // Find furthest placement
     const startingPositions = this._findValidStartingPosition(placementCoord); // Determine all valid starting positions
-    const position = this.randomItem(startingPositions); // Randomly pick from all starting pos
+    const position = this.randomItem(startingPositions); // Randomly pick from all starting positions
+    // Now that we've found the best spot to start in, find all tile configs in hand that work
     const validStartingTiles = [];
     hand.forEach(tile => {
       for (let i = 0; i < 4; i++) {
+        // 4 Rotations
         const tileCopy = tile.copy(i);
+        // If we can put our avatar here, consider this tile
         if (RuleChecker.canPlaceAvatar(boardState, id, placementCoord, tileCopy, position)) {
           validStartingTiles.push(tileCopy);
         }
@@ -145,8 +148,8 @@ class LonelyStrategy extends Strategy {
   }
 
   /**
-   * Determines a player's intermediate action. This action will use the first
-   * tile in the player's hand and place it on the adjacent square.
+   * Determines a player's intermediate action, based on checking each tile and rotation
+   * in hand and picking the placement that yields the highest action value (The loneliest tile).
    *
    * @param {string} id the player's ID
    * @param {Tile[]} hand the player's current hand of tiles
@@ -159,13 +162,15 @@ class LonelyStrategy extends Strategy {
     const mockPlayer = new Player(id, id, null);
     mockPlayer.receiveHand(hand);
 
-    // Determine the best tile to use by evaluating each one's position for a ranking value
     let bestAction = null;
     let bestActionValue = -1;
+    // Find the best tile and rotation in hand with to return the best valued action
     hand.forEach(tile => {
       for (let i = 0; i < 4; i++) {
+        // 4 Rotations
         const action = new IntermediateAction(tile.copy(i), coords);
         if (RuleChecker.canTakeAction(boardState, action, mockPlayer)) {
+          // The best action is the one with the highest Action value
           const actionValue = this._getActionValue(boardState, coords);
           if (actionValue > bestActionValue) {
             bestActionValue = actionValue;
