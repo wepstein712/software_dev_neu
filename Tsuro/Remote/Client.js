@@ -42,9 +42,6 @@ class Client {
     this.strategy = strategy;
     this.player = null;
 
-    this._hasGameStarted = false;
-    this._hasGameEnded = false;
-
     this.handlers = {
       [MESSAGE_ACTIONS.SET_UNIQUE_NAME]: this._handleSetUniqueName,
       [MESSAGE_ACTIONS.SET_COLOR]: this._handleSetColor,
@@ -206,7 +203,6 @@ class Client {
    * the game
    */
   _handleGameOver(payload) {
-    this._hasGameEnded = true;
     const { winners, losers } = payload;
     this.player.endGame(winners, losers);
 
@@ -278,7 +274,6 @@ class Client {
    * initial avatar positions
    */
   _handleUpdateState(payload) {
-    this._hasGameStarted = true;
     this.player.updateState(BoardState.fromJson(payload));
   }
 
