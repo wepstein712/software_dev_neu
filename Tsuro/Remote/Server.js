@@ -4,13 +4,14 @@ const Validation = require('./Validation');
 const { Referee } = require('../Admin');
 const ProxyPlayer = require('../Player/ProxyPlayer');
 const Message = require('../Common/message');
-const { DEFAULT_CONN, MESSAGE_ACTIONS } = require('../Common/utils/constants');
+const {
+  DEFAULT_CONN,
+  MESSAGE_ACTIONS,
+  PLAYER_POOL_SIZE,
+  SECOND,
+} = require('../Common/utils/constants');
 require('../Common/utils/polyfills');
 
-const MIN_PLAYER_SIZE = 3;
-const MAX_PLAYER_SIZE = 5;
-
-const SECOND = 1000;
 const EXIT_TIMEOUT = 10;
 const STANDBY_TIMEOUT = 2 * SECOND;
 
@@ -115,9 +116,9 @@ class Server {
    */
   _checkForGameStart() {
     const numPlayers = this.referee.getPlayers().length;
-    if (numPlayers === MIN_PLAYER_SIZE) {
+    if (numPlayers === PLAYER_POOL_SIZE.MIN) {
       this._toggleTimeout(true);
-    } else if (numPlayers === MAX_PLAYER_SIZE && this._standbyTimeout) {
+    } else if (numPlayers === PLAYER_POOL_SIZE.MAX && this._standbyTimeout) {
       this._toggleTimeout(false);
       this._runGame();
     }
@@ -164,7 +165,7 @@ class Server {
     if (session) {
       const { client, id } = session;
       this.referee.removePlayer(id, false, true);
-      if (this.referee.getPlayers().length < MIN_PLAYER_SIZE) {
+      if (this.referee.getPlayers().length < PLAYER_POOL_SIZE.MIN) {
         this._toggleTimeout(false);
       }
 

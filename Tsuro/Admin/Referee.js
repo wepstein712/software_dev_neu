@@ -322,6 +322,7 @@ class Referee {
   async _promptPlayerForAction(player, isInitial = false) {
     const handSize = isInitial ? 3 : 2;
     const boardState = this._startPlayerTurn(player, handSize);
+
     try {
       const action = await player.getAction(isInitial);
       const isLegal = this._checkForActionLegality(boardState, player, action, isInitial);

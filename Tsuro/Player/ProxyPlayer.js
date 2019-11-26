@@ -1,7 +1,9 @@
 const BasePlayer = require('./BasePlayer');
 const Message = require('../Common/message');
 const { InitialAction, IntermediateAction } = require('../Common');
-const { MESSAGE_ACTIONS } = require('../Common/utils/constants');
+const { MESSAGE_ACTIONS, SECOND } = require('../Common/utils/constants');
+
+const AFK_TIMEOUT = 10 * SECOND;
 
 class ProxyPlayer extends BasePlayer {
   /**
@@ -38,7 +40,7 @@ class ProxyPlayer extends BasePlayer {
    * passed in the constructor. Marks the player as kicked to prevent further
    * messages from being sent.
    *
-   * @param {string} action the action identifier for the kick message
+   * @param {string} [action] the action identifier for the kick message
    * @param {any} [payload] the payload of the kick message
    */
   _kick(action, payload) {
@@ -144,7 +146,9 @@ class ProxyPlayer extends BasePlayer {
    * @async
    * Sends the client a `PROMPT_FOR_ACTION` message, with whether the
    * action is initial as payload. Then, opens a one-time `data` event
-   * handler for receiving the player's respective action.
+   * handler for receiving the player's respective action. The player
+   * only has 10 seconds to send a message back, before being kicked
+   * from the game for being AFK.
    *
    * If the message received is malformed JSON or uses an unknown
    * message action, the player's client will be kicked and removed
@@ -157,6 +161,8 @@ class ProxyPlayer extends BasePlayer {
   async getAction(isInitial = false) {
     try {
       const action = await new Promise((resolve, reject) => {
+        let afkTimeout = null;
+
         /**
          * Event handler for `data` that resolves the promise when
          * the client sends a `SEND_ACTION` message, and rejects on
@@ -165,6 +171,7 @@ class ProxyPlayer extends BasePlayer {
          * @param {Buffer} data the data buffer of the client message
          */
         const onData = data => {
+          clearTimeout(afkTimeout);
           const text = data.toString().trim();
           try {
             const message = JSON.parse(text.split('\n')[0]);
@@ -185,12 +192,17 @@ class ProxyPlayer extends BasePlayer {
          * that the client has disconnected.
          */
         const onEnd = () => {
-          reject('Client has disconnected.');
+          clearTimeout(afkTimeout);
+          reject();
         };
 
         this._client.once('data', onData);
         this._client.on('end', onEnd);
         this._sendMessage(MESSAGE_ACTIONS.PROMPT_FOR_ACTION, isInitial);
+
+        afkTimeout = setTimeout(() => {
+          reject();
+        }, AFK_TIMEOUT);
       });
       return action;
     } catch (messageAction) {

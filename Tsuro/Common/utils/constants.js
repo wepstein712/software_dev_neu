@@ -64,10 +64,17 @@ exports.MESSAGE_ACTIONS = {
   UNKNOWN_STRAT: 'unknown_strat',
 };
 
+exports.PLAYER_POOL_SIZE = {
+  MIN: 3,
+  MAX: 5,
+};
+
 exports.PORTS = {
   ZERO: 0,
   ONE: 1,
 };
+
+exports.SECOND = 1000;
 
 exports.STRATEGIES = {
   DUMB: 'dumb',
