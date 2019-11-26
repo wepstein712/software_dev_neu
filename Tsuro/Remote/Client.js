@@ -5,6 +5,9 @@ const Message = require('../Common/message');
 const { BoardState, SimpleTile } = require('../Common');
 const { MESSAGE_ACTIONS } = require('../Common/utils/constants');
 
+const SEPARATOR = '-----';
+const PLACE_MAP = ['1st', '2nd', '3rd', '4th', '5th'];
+
 const CONN_ERRORS = {
   NO_SERVER_ACTIVE: 'ECONNREFUSED',
 };
@@ -125,8 +128,10 @@ class Client {
    * @param {string} reason the specific reason why the error occurred
    */
   _logError(message, reason) {
+    console.log(SEPARATOR);
     console.log(message);
     console.log(`REASON: ${reason}`);
+    console.log(SEPARATOR);
   }
 
   /**
@@ -203,6 +208,16 @@ class Client {
     this._hasGameEnded = true;
     const { winners, losers } = payload;
     this.player.endGame(winners, losers);
+
+    console.log(SEPARATOR);
+    console.log('The game has ended.');
+    winners.forEach((place, i) => {
+      const number = PLACE_MAP[i];
+      console.log(number, 'place:', place.join(', '));
+    });
+    if (losers.length > 0) {
+      console.log('Losers:', losers.join(', '));
+    }
   }
 
   /**
@@ -211,6 +226,7 @@ class Client {
    */
   _handleClearHand() {
     this.player.clearHand();
+    console.log('Your hand has been cleared.');
   }
 
   /**
@@ -222,6 +238,13 @@ class Client {
    */
   _handleTurnStatus(payload) {
     this.player.setTurnStatus(payload);
+
+    if (payload) {
+      console.log(SEPARATOR);
+      console.log('It is your turn.');
+    } else {
+      console.log('Your turn has ended.');
+    }
   }
 
   /**
@@ -233,6 +256,12 @@ class Client {
    */
   _handleRemovePlayer(payload) {
     this.player.lose(payload);
+
+    if (payload) {
+      console.log('You have lost.');
+    } else {
+      console.log('You have made an illegal action and have lost.');
+    }
   }
 
   /**
@@ -263,6 +292,8 @@ class Client {
   _handleDealHand(payload) {
     const hand = payload.map(tileIdx => new SimpleTile(tileIdx));
     this.player.receiveHand(hand);
+
+    console.log(`You have received the following cards: ${payload.join(', ')}.`);
   }
 
   /**
@@ -276,7 +307,10 @@ class Client {
    */
   async _handlePromptForAction(payload) {
     const action = await this.player.getAction(payload);
-    this._sendMessage(MESSAGE_ACTIONS.SEND_ACTION, action.toJson());
+    const jsonAction = action.toJson();
+    this._sendMessage(MESSAGE_ACTIONS.SEND_ACTION, jsonAction);
+
+    console.log(`You have chosen the following action: ${JSON.stringify(jsonAction)}.`);
   }
 
   /**
@@ -290,6 +324,12 @@ class Client {
   _handleSetColor(payload) {
     const { id, color } = payload;
     this.player.setColor(id, color);
+
+    if (id === this.name) {
+      console.log(`Your color is ${color}.`);
+    } else {
+      console.log(id, `has joined and registered as color ${color}.`);
+    }
   }
 
   /**
@@ -301,8 +341,9 @@ class Client {
    */
   _handleSetUniqueName(payload) {
     this.name = payload;
-    console.log('Your name is', this.name);
     this.player = new Player(this.name, this.name, this.strategy);
+
+    console.log(`Your unique name is ${this.name}.`);
   }
 
   /**
@@ -398,6 +439,7 @@ class Client {
    * message to the server, with the client's ID and strategy as payload.
    */
   _register() {
+    console.log('Registered client as', this.name, 'with strategy', this.strategy);
     this._sendMessage(MESSAGE_ACTIONS.REGISTER_CLIENT, {
       id: this.name,
       strategy: this.strategy,

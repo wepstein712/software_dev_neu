@@ -16,6 +16,7 @@ class ProxyPlayer extends BasePlayer {
    * @param {net.Socket} client the player's corresponding client
    * @param {function} kickClient a callback function used to kick the
    * client from the server
+   * @param {Logger} logger the server's logger to include new messages
    */
   constructor(id, name, strategy, client, kickClient, logger) {
     super(id, name, strategy);

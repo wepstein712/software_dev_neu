@@ -7,7 +7,10 @@ const COLOR_SET = [COLORS.WHITE, COLORS.BLACK, COLORS.RED, COLORS.GREEN, COLORS.
 
 class Referee {
   /**
+   * @constructor
    * Creates a new Referee with a new board and no players.
+   *
+   * @param {Logger} logger the server's logger to add new messages
    */
   constructor(logger) {
     this.logger = logger;
