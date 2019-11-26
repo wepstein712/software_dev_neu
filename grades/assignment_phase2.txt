@@ -1,0 +1,10 @@
+* (15/15) Delivery of artifacts
+* (10/10) rules.md
+* (15/15) board.PP
+* (14/15) tests
+    - (-1) an executable shouldn't require any packages (in my case I was missing d3-node), the "pkg" package could be helpful here
+
+Total: (54/55)
+
+Graded by Ivan Chen.
+
