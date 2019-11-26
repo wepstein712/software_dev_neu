@@ -28,6 +28,8 @@ This project is to be completed by the `sudo-wudo` team, whose members include J
 
 - [Phase 5 (1 late day)](https://github.ccs.neu.edu/cs4500-fall2019-neu/sudo-wudo/tree/575ea67723a96eabdae9626269210debff80ddaf)
 
+- [Phase 6 (1 late day)](https://github.ccs.neu.edu/cs4500-fall2019-neu/sudo-wudo/tree/d415b2ed2a4fa09b23a0cc490d618ee0a8c16a98)
+
 ## Project Structure
 
 ```
@@ -37,6 +39,7 @@ Tsuro
 |== 3
 |== 4
 |== 5
+|== 6
 |== Admin
 |  |-- index.js
 |  |-- Observer.js
@@ -45,31 +48,48 @@ Tsuro
 |== Common
 |  |== __tests__
 |  |== utils
-|  |-- action.js
 |  |-- avatar.js
+|  |-- BaseAction.js
 |  |-- board.js
 |  |-- boardState.js
 |  |-- coords.js
 |  |-- index.js
+|  |-- InitialAction.js
+|  |-- IntermediateAction.js
+|  |-- message.js
 |  |-- path.js
 |  |-- position.js
 |  |-- renderUtils.js
 |  |-- rules.js
+|  |-- SimpleTile.js
 |  |-- tiles.js
 |
 |== Planning
 |  |-- board.md
 |  |-- observer.md
 |  |-- player.md
+|  |-- protocol.md
 |  |-- referee.md
 |  |-- rules.md
 |
 |== Player
 |  |== Strategy
-|  |  |-- Strategy.js
+|  |  |-- BaseStrategy.js
 |  |  |-- DumbStrategy.js
+|  |  |-- index.js
+|  |  |-- LonelyStrategy.js
 |  |
+|  |-- BasePlayer.js
+|  |-- index.js
 |  |-- Player.js
+|  |-- ProxyPlayer.js
+|
+|== Remote
+|  |-- Client.js
+|  |-- index.js
+|  |-- Logger.js
+|  |-- Server.js
+|  |-- Validation.js
 |
 |-- .babelrc
 |-- package-lock.json
