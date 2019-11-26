@@ -9,8 +9,6 @@
     "build": "webpack"
   },
   "dependencies": {
-    "btoa": "^1.2.1",
-    "canvas": "^2.6.0",
     "core-js": "^3.4.2",
     "d3-node": "^2.2.0",
     "tcp-ping": "^0.1.1"
