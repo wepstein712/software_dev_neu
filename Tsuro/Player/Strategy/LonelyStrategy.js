@@ -65,7 +65,7 @@ class LonelyStrategy extends Strategy {
    * @param {Coords} coords the coordinates being checked.
    * @returns {number} reciprocal value of adjacent tiles. Fewer tiles means a higher score.
    */
-  _getActionValue(boardState, coords) {
+  static _getActionValue(boardState, coords) {
     if (coords && boardState) {
       return 1 / (1 + boardState.getNumberOfNeighboringTiles(coords));
     } else {
@@ -80,7 +80,7 @@ class LonelyStrategy extends Strategy {
    * @param {Coords} coord the place we are checking
    * @returns {Position[]} the positions that would be valid to put as an initial placement.
    */
-  _findValidStartingPosition(coord) {
+  static _findValidStartingPosition(coord) {
     const validPositions = [];
 
     /**
