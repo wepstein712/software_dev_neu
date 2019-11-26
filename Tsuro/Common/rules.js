@@ -138,12 +138,12 @@ class RuleChecker {
       !boardState.getAvatar(playerId) && // The avatar has not been placed
       !boardState.getTile(coords) && // This tile space is empty
       !boardState.hasNeighboringTiles(coords) && // There are no neighbors
-      this.checkIsMoveOnBoard(coords, tile, position)
-    ); // There is no loop back to the same side
+      this.checkIsMoveOnBoard(coords, tile, position) // The move stays on the board
+    );
   }
 
   /**
-   * Checks to see if a move would put the player off the edge of the board.
+   * Checks to see if a move would move the player off the edge of the board.
    * @param {Coords} coords the coordinates to place the avatar at
    * @param {Tile} tile the tile the avatar is attempting to be placed on
    * @param {Position} position the position the avatar is attempting to be set as
@@ -154,7 +154,7 @@ class RuleChecker {
     try {
       coordsCopy.moveOne(tile.getEndingPosition(position).direction);
       return true;
-    } catch {
+    } catch (e) {
       return false;
     }
   }
