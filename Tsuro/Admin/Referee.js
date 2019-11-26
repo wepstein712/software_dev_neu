@@ -9,7 +9,8 @@ class Referee {
   /**
    * Creates a new Referee with a new board and no players.
    */
-  constructor() {
+  constructor(logger) {
+    this.logger = logger;
     this.board = new Board();
     this.currentPlayerIdx = -1;
     this.deckIdx = 0;
@@ -80,7 +81,8 @@ class Referee {
       // sets this player's color for existing players
       this.playerMap[playerId].setColor(id, color);
       // sets existing player's color for this player
-      player.setColor(playerId, this.playerMap[playerId].getColor());
+      const playerColor = this.playerMap[playerId].getColor();
+      player.setColor(playerId, playerColor);
     });
 
     this._updateObservers(observer => {
@@ -151,6 +153,7 @@ class Referee {
    * @returns {BoardState} the current board state
    */
   _startPlayerTurn(player, handSize) {
+    this.logger.debug(player.id, 'has started their turn.');
     this.currentTurn += 1;
     const boardState = this.board.getState();
     player.updateState(boardState);
@@ -236,6 +239,7 @@ class Referee {
     this._updateObservers(observer => {
       observer.updateState(boardState);
     });
+    this.logger.debug(player.id, 'has ended their turn.');
   }
 
   /**

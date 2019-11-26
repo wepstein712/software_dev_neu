@@ -46,6 +46,7 @@ exports.LETTERS_MAP = LETTERS.reduce(
 );
 
 exports.MESSAGE_ACTIONS = {
+  SET_UNIQUE_NAME: 'set_unique_name',
   SET_COLOR: 'set_color',
   TURN_STATUS: 'is_turn',
   DEAL_HAND: 'new_hand',

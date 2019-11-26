@@ -17,7 +17,7 @@ class ProxyPlayer extends BasePlayer {
    * @param {function} kickClient a callback function used to kick the
    * client from the server
    */
-  constructor(id, name, strategy, client, kickClient) {
+  constructor(id, name, strategy, client, kickClient, logger) {
     super(id, name, strategy);
     this.color = null;
     this.hand = [];
@@ -25,6 +25,10 @@ class ProxyPlayer extends BasePlayer {
     this._client = client;
     this._kickClient = kickClient;
     this._wasKicked = false;
+
+    this.logger = logger;
+
+    this._sendMessage(MESSAGE_ACTIONS.SET_UNIQUE_NAME, name);
   }
 
   /**
@@ -54,7 +58,10 @@ class ProxyPlayer extends BasePlayer {
   _sendMessage(action, payload) {
     if (!this._wasKicked) {
       const message = new Message(action, payload);
-      this._client.write(message.toString());
+      const stringMessage = message.toString();
+
+      this._client.write(stringMessage);
+      this.logger.log(this.id, '<<', stringMessage);
     }
   }
 
@@ -157,6 +164,7 @@ class ProxyPlayer extends BasePlayer {
             if (action !== MESSAGE_ACTIONS.SEND_ACTION) {
               reject(MESSAGE_ACTIONS.UNKNOWN_ACTION);
             } else {
+              this.logger.log(this.id, '>>', new Message(action, payload).toString());
               resolve(this._getActionFromPayload(payload, isInitial));
             }
           } catch (err) {
@@ -165,10 +173,11 @@ class ProxyPlayer extends BasePlayer {
         };
         this._client.once('data', onData);
         // TODO: maybe add end listener too?
-        console.log(`prompting ${this.id}`);
+        // this._client.on('end', () => {
+        //   console.log('disconnected');
+        // });
         this._sendMessage(MESSAGE_ACTIONS.PROMPT_FOR_ACTION, isInitial);
       });
-      console.log(`received ${this.id}`);
       return action;
     } catch (messageAction) {
       this._kick(messageAction);

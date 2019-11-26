@@ -7,10 +7,18 @@ class Logger {
     return this.history;
   }
 
-  log(...message) {
-    const msg = message.join(' ');
+  _addMessage(message) {
+    const msg = message.join(' ').trim();
     this.history.push(msg);
     console.log(msg);
+  }
+
+  debug(...message) {
+    this._addMessage(['DEBUG:', ...message]);
+  }
+
+  log(id, ...message) {
+    this._addMessage([id, ...message]);
   }
 }
 

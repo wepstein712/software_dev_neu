@@ -36,12 +36,13 @@ class Client {
 
     this.name = name;
     this.strategy = strategy;
-    this.player = new Player(name, name, strategy);
+    this.player = null;
 
     this._hasGameStarted = false;
     this._hasGameEnded = false;
 
     this.handlers = {
+      [MESSAGE_ACTIONS.SET_UNIQUE_NAME]: this._handleSetUniqueName,
       [MESSAGE_ACTIONS.SET_COLOR]: this._handleSetColor,
       [MESSAGE_ACTIONS.TURN_STATUS]: this._handleTurnStatus,
       [MESSAGE_ACTIONS.DEAL_HAND]: this._handleDealHand,
@@ -289,6 +290,19 @@ class Client {
   _handleSetColor(payload) {
     const { id, color } = payload;
     this.player.setColor(id, color);
+  }
+
+  /**
+   * @private
+   * Sets the client's name to the server-generated unique one,
+   * and creates the player object.
+   *
+   * @param {string} payload the server-generated unique name
+   */
+  _handleSetUniqueName(payload) {
+    this.name = payload;
+    console.log('Your name is', this.name);
+    this.player = new Player(this.name, this.name, this.strategy);
   }
 
   /**

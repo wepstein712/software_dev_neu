@@ -12,7 +12,7 @@ const MAX_PLAYER_SIZE = 5;
 
 const SECOND = 1000;
 const EXIT_TIMEOUT = 10;
-const STANDBY_TIMEOUT = 10 * SECOND;
+const STANDBY_TIMEOUT = 2 * SECOND;
 
 const CONN_ERRORS = {
   CLIENT_DISCONNECTED: 'EPIPE',
@@ -34,7 +34,7 @@ class Server {
     this.clients = {};
 
     this.logger = new Logger();
-    this.referee = new Referee();
+    this.referee = new Referee(this.logger);
 
     this._standbyTimeout = null;
     this._hasGameStarted = false;
@@ -50,6 +50,15 @@ class Server {
     this._createServer();
   }
 
+  _getIdFromSession(sessionId) {
+    let id = 'ANON_CLIENT';
+    const session = this.clients[sessionId];
+    if (session) {
+      id = session.id || id;
+    }
+    return id;
+  }
+
   /**
    * @private @async
    * Runs the referee's game. Once the game has ended, it will destroy all
@@ -58,9 +67,9 @@ class Server {
   async _runGame() {
     this._standbyTimeout = null;
     this._hasGameStarted = true;
-    this.logger.log('server', '||', 'game started');
+    this.logger.debug('Game has started.');
     await this.referee.runGame();
-    this.logger.log('server', '||', 'game ended');
+    this.logger.debug('Game has ended.');
     setTimeout(() => {
       Object.values(this.clients).forEach(({ client }) => {
         client.destroy();
@@ -81,11 +90,11 @@ class Server {
       this._standbyTimeout = setTimeout(() => {
         this._runGame();
       }, STANDBY_TIMEOUT);
-      this.logger.log('server', '||', 'timeout started');
+      this.logger.debug('Standby timeout has started.');
     } else if (this._standbyTimeout) {
       clearTimeout(this._standbyTimeout);
       this._standbyTimeout = null;
-      this.logger.log('server', '||', 'timeout ended');
+      this.logger.debug('Standby timeout has ended.');
     }
   }
 
@@ -118,10 +127,15 @@ class Server {
    * @param {net.Socket} client the socket client to destroy
    * @param {string} action the action of the kick message
    * @param {any} [payload] the payload of the kick message
+   * @param {string} [sessionId]
    */
-  _kickClient(client, action, payload) {
+  _kickClient(client, action, payload, sessionId) {
     const message = new Message(action, payload);
-    client.write(message.toString());
+    const stringMessage = message.toString();
+
+    client.write(stringMessage);
+    this.logger.log(this._getIdFromSession(sessionId), '<<', stringMessage);
+
     setTimeout(() => {
       client.destroy();
     }, EXIT_TIMEOUT);
@@ -149,7 +163,7 @@ class Server {
       }
 
       if (action) {
-        this._kickClient(client, action, payload);
+        this._kickClient(client, action, payload, sessionId);
       }
 
       delete this.clients[sessionId];
@@ -170,7 +184,7 @@ class Server {
   _endClientSession(sessionId, action, payload) {
     const id = this._removeClient(sessionId, action, payload);
     if (id) {
-      this.logger.log(id, '<<', 'kicked');
+      this.logger.debug(id, 'has been kicked.');
     }
   }
 
@@ -215,14 +229,12 @@ class Server {
         uniqueId,
         strategy,
         client,
-        this._getKickCallback(sessionId)
+        this._getKickCallback(sessionId),
+        this.logger
       );
-      const color = this.referee.addPlayer(player);
+      this.referee.addPlayer(player);
 
       this.clients[sessionId].id = uniqueId;
-
-      this.logger.log(id, '>>', 'create player', id, 'with strategy', strategy);
-      this.logger.log(id, '<<', 'set color to', color);
 
       this._checkForGameStart();
     }
@@ -243,6 +255,11 @@ class Server {
   _handleMessage(sessionId, message) {
     const { action, payload } = message;
 
+    this.logger.log(
+      this._getIdFromSession(sessionId),
+      '>>',
+      new Message(action, payload).toString()
+    );
     const handler = this.handlers[action];
     if (handler) {
       handler.bind(this)(sessionId, payload);
@@ -290,7 +307,7 @@ class Server {
     return () => {
       const id = this._removeClient(sessionId);
       if (id) {
-        this.logger.log(id, '>>', 'disconnected');
+        this.logger.debug(id, 'has disconnected.');
       }
     };
   }
@@ -381,6 +398,7 @@ class Server {
   _createServer() {
     this.server = createServer(this._onClientConnect.bind(this));
     this.server.listen(this.port, this.ipAddress);
+    this.logger.debug('Create server at', `${this.ipAddress}:${this.port}`);
   }
 }
 
