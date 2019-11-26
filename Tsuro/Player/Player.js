@@ -19,7 +19,6 @@ class Player extends BasePlayer {
     this.hand = [];
     this.gameStatus = GAME_STATUS.WAITING;
     this.boardState = new BoardState();
-    this._shouldPrintResults = true;
   }
 
   /**
@@ -124,14 +123,6 @@ class Player extends BasePlayer {
   // eslint-disable-next-line no-unused-vars
   lose(forLegalMove) {
     // stub, nothing need happen
-  }
-
-  /**
-   * Sets whether this player will print out who won their game at the end.
-   * @param {Boolean} flag if the player should print
-   */
-  setPlayerPrintResultsStatus(flag) {
-    this._shouldPrintResults = flag;
   }
 
   /**

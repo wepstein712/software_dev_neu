@@ -199,7 +199,6 @@ class ProxyPlayer extends BasePlayer {
         this._client.once('data', onData);
         this._client.on('end', onEnd);
         this._sendMessage(MESSAGE_ACTIONS.PROMPT_FOR_ACTION, isInitial);
-
         afkTimeout = setTimeout(() => {
           reject();
         }, AFK_TIMEOUT);

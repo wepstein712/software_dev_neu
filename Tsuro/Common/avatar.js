@@ -167,6 +167,12 @@ class Avatar {
     renderCircle('avatar').attr('fill', this.color);
   }
 
+  /**
+   * Converts this Avatar object into JSON to be sent over a TCP
+   * server connection.
+   *
+   * @returns {object} a JSON-ified Avatar object
+   */
   toJson() {
     return {
       id: this.id,
@@ -178,6 +184,13 @@ class Avatar {
     };
   }
 
+  /**
+   * @static
+   * Creates a new Avatar object from the JSON-ified version.
+   *
+   * @param {object} json the JSON-ified Avatar object, as created by
+   * the `toJson` method.
+   */
   static fromJson(payload) {
     const { id, color, coords, position, collided, exited } = payload;
     return new Avatar(

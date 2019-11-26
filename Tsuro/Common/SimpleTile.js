@@ -3,6 +3,12 @@ const { tiles } = require('./__tests__');
 const { getTileFromLetters } = require('./utils');
 
 class SimpleTile extends Tile {
+  /**
+   * @constructor
+   * Creates a new tile based on the given tile index.
+   *
+   * @param {number} index the index of the tile to create
+   */
   constructor(index) {
     super([]);
 
@@ -15,6 +21,11 @@ class SimpleTile extends Tile {
     this.index = index;
   }
 
+  /**
+   * Creates a new copy of this Tile.
+   *
+   * @returns {SimpleTile} a copy of this Tile
+   */
   copy() {
     const copy = super.copy();
     copy.index = this.index;
