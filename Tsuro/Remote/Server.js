@@ -13,7 +13,7 @@ const {
 require('../Common/utils/polyfills');
 
 const EXIT_TIMEOUT = 10;
-const STANDBY_TIMEOUT = 2 * SECOND;
+const STANDBY_TIMEOUT = 30 * SECOND;
 
 const CONN_ERRORS = {
   CLIENT_DISCONNECTED: 'EPIPE',

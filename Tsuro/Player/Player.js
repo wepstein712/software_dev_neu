@@ -123,7 +123,7 @@ class Player extends BasePlayer {
    */
   // eslint-disable-next-line no-unused-vars
   lose(forLegalMove) {
-    // TODO: stub
+    // stub, nothing need happen
   }
 
   /**
