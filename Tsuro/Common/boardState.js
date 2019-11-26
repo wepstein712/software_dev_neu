@@ -150,9 +150,10 @@ class BoardState {
    * @param {Coords} coords the coordinates of the tile
    */
   getNumberOfNeighboringTiles(coords) {
-    return DIRECTIONS_CLOCKWISE.filter(direction => {
-      return this._getNeighboringTile(coords, direction);
-    }).length;
+    const neighbors = DIRECTIONS_CLOCKWISE.filter(direction =>
+      this._getNeighboringTile(coords, direction)
+    );
+    return neighbors.length;
   }
   /**
    * Checks whether a tile with the given coordinates has any

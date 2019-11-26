@@ -151,8 +151,9 @@ class RuleChecker {
    */
   static checkIsMoveOnBoard(coords, tile, position) {
     const coordsCopy = coords.copy();
+    const { direction } = tile.getEndingPosition(position);
     try {
-      coordsCopy.moveOne(tile.getEndingPosition(position).direction);
+      coordsCopy.moveOne(direction);
       return true;
     } catch (e) {
       return false;
