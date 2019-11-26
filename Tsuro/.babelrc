@@ -6,7 +6,8 @@
         "targets": {
           "node": "6.17.1"
         },
-        "useBuiltIns": "entry"
+        "useBuiltIns": "entry",
+        "corejs": 3
       }
     ]
   ],

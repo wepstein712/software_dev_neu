@@ -1,18 +1,12 @@
+const getArgs = require('./getArgs');
 const { Client, Server } = require('../../Remote');
 const { DEFAULT_CONN, PLAYER_POOL_SIZE } = require('../../Common/utils/constants');
 const { getInput } = require('../../Common/__tests__');
 
 const main = async () => {
-  const flags = process.argv.slice(2);
-  const ipAddress = flags[0] || DEFAULT_CONN.IP_ADDRESS;
-  const port = flags[1] || DEFAULT_CONN.PORT;
-
-  // Disables logging for server and clients, and stores default
-  // functionality in `_defaultLog`
-  const _defaultLog = console.log;
-  console.log = () => {};
-
-  new Server(ipAddress, port, 'xrun.log');
+  const args = getArgs();
+  const ipAddress = args[0] || DEFAULT_CONN.IP_ADDRESS;
+  const port = args[1] || DEFAULT_CONN.PORT;
 
   try {
     const players = await getInput();
@@ -21,11 +15,14 @@ const main = async () => {
     } else if (players.length > PLAYER_POOL_SIZE.MAX) {
       throw 'Too many players';
     }
+
+    new Server(ipAddress, port, 'xrun.log', false);
+
     players.forEach(({ name, strategy }) => {
       new Client(ipAddress, port, name, strategy);
     });
   } catch (err) {
-    _defaultLog(err);
+    console.log(err);
     process.exit(0);
   }
 };

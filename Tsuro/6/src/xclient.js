@@ -1,9 +1,8 @@
+const getArgs = require('./getArgs');
 const { Client } = require('../../Remote');
 
 const main = () => {
-  const flags = process.argv.slice(2);
-  const [ipAddress, port, name, strategy] = flags;
-
+  const [ipAddress, port, name, strategy] = getArgs();
   new Client(ipAddress, port, name, strategy);
 };
 

@@ -1,9 +1,8 @@
+const getArgs = require('./getArgs');
 const { Server } = require('../../Remote');
 
 const main = () => {
-  const flags = process.argv.slice(2);
-  const [ipAddress, port] = flags;
-
+  const [ipAddress, port] = getArgs();
   new Server(ipAddress, port, 'xserver.log');
 };
 

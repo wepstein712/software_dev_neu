@@ -8,7 +8,7 @@ You may specify the IP address and port as arguments, but defaults are provided 
 
 ### Notes
 
-The program will output the log messages both in the terminal window and in an `xserver.log` file (stored in the directory it is run).
+The program will output the log messages both in the terminal window and in an `xserver.log` file (stored in the directory the program is run).
 
 ### Command
 
@@ -52,27 +52,26 @@ The client names and strategies (in the format given by the assignment) are then
 
 ### Notes
 
-The program will only write to the terminal if an error has occurred (too few or too many players). Otherwise, all server logs can be found in the
-`xrun.log` file (stored in the directory it is run).
+All server logs can be found in the `xrun.log` file (stored in the directory the program is run).
 
 ### Command
 
-```js
+```json
 // xrun-test.json
 [
   {
-    name: 'rebecca',
-    strategy: 'dumb',
+    "name": "rebecca",
+    "strategy": "dumb"
   },
   {
-    name: 'josh_chan',
-    strategy: 'dumb',
+    "name": "josh_chan",
+    "strategy": "dumb"
   },
   {
-    name: 'greg',
-    strategy: 'dumb',
-  },
-];
+    "name": "greg",
+    "strategy": "dumb"
+  }
+]
 ```
 
 ```sh

@@ -28,8 +28,15 @@ class Server {
    * @param {string} [ipAddress='127.0.0.1'] the IP address to create
    * the server at
    * @param {number} [port=8000] the port to host the server at
+   * @param {string} [path] the path to write the log to
+   * @param {boolean} [useStandby] whether to use the standby timer
    */
-  constructor(ipAddress = DEFAULT_CONN.IP_ADDRESS, port = DEFAULT_CONN.PORT, path) {
+  constructor(
+    ipAddress = DEFAULT_CONN.IP_ADDRESS,
+    port = DEFAULT_CONN.PORT,
+    path,
+    useStandby = true
+  ) {
     this.ipAddress = ipAddress;
     this.port = port;
     this.server = null;
@@ -38,6 +45,7 @@ class Server {
     this.logger = new Logger(path);
     this.referee = new Referee(this.logger);
 
+    this._useStandby = useStandby;
     this._standbyTimeout = null;
     this._hasGameStarted = false;
 
@@ -92,9 +100,12 @@ class Server {
    */
   _toggleTimeout(toggle) {
     if (toggle) {
-      this._standbyTimeout = setTimeout(() => {
-        this._runGame();
-      }, STANDBY_TIMEOUT);
+      this._standbyTimeout = setTimeout(
+        () => {
+          this._runGame();
+        },
+        this._useStandby ? STANDBY_TIMEOUT : 0
+      );
       this.logger.debug('Standby timeout has started.');
     } else if (this._standbyTimeout) {
       clearTimeout(this._standbyTimeout);
