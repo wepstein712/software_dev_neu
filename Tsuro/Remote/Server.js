@@ -16,6 +16,7 @@ const STANDBY_TIMEOUT = 2 * SECOND;
 
 const CONN_ERRORS = {
   CLIENT_DISCONNECTED: 'EPIPE',
+  CLIENT_DESTROYED: 'ECONNRESET',
 };
 
 class Server {
@@ -45,6 +46,7 @@ class Server {
 
     this.errorHandlers = {
       [CONN_ERRORS.CLIENT_DISCONNECTED]: this._handleClientDisconnect,
+      [CONN_ERRORS.CLIENT_DESTROYED]: this._handleClientDestroy,
     };
 
     this._createServer();
@@ -68,6 +70,7 @@ class Server {
     this._standbyTimeout = null;
     this._hasGameStarted = true;
     this.logger.debug('Game has started.');
+    // process.exit(0);
     await this.referee.runGame();
     this.logger.debug('Game has ended.');
     setTimeout(() => {
@@ -138,7 +141,9 @@ class Server {
     this.logger.logTo(this._getIdFromSession(sessionId), stringMessage);
 
     setTimeout(() => {
-      client.destroy();
+      if (!client.destroyed) {
+        client.destroy();
+      }
     }, EXIT_TIMEOUT);
   }
 
@@ -324,6 +329,17 @@ class Server {
 
   /**
    * @private
+   * Handles the `ECONNRESET` error for when client disconnects before
+   * the server can destroy it.
+   *
+   * @param {string} sessionId the session ID of the client
+   */
+  _handleClientDestroy(sessionId) {
+    this._onClientEnd(sessionId)();
+  }
+
+  /**
+   * @private
    * Event listener factory for the `error` event. This will create an
    * `error` event listener for the client that uses the `errorHandlers`
    * object to handle error events accordingly.
@@ -338,9 +354,7 @@ class Server {
       if (handler) {
         handler.bind(this)(sessionId);
       } else {
-        // TODO: handle unknown error
-        console.log('Unknown error code');
-        console.log(err);
+        process.exit(0);
       }
     };
   }
@@ -376,8 +390,10 @@ class Server {
    * @param {net.Socket} client the client connecting to this server
    */
   _onClientConnect(client) {
+    let useDataHandler = true;
     if (this._hasGameStarted) {
-      return this._kickClient(client, MESSAGE_ACTIONS.DENY_ENTRY, 'Game has already begun.');
+      useDataHandler = false;
+      this._kickClient(client, MESSAGE_ACTIONS.DENY_ENTRY, 'Game has already begun.');
     }
     const sessionId = this._getUniqueSessionId();
     this.clients[sessionId] = {
@@ -385,7 +401,9 @@ class Server {
       id: null,
     };
 
-    client.once('data', this._onClientData(sessionId));
+    if (useDataHandler) {
+      client.once('data', this._onClientData(sessionId));
+    }
     client.on('end', this._onClientEnd(sessionId));
     client.on('error', this._onClientError(sessionId));
   }

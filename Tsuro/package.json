@@ -11,7 +11,8 @@
   "dependencies": {
     "btoa": "^1.2.1",
     "canvas": "^2.6.0",
-    "d3-node": "^2.2.0"
+    "d3-node": "^2.2.0",
+    "tcp-ping": "^0.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.7.2",

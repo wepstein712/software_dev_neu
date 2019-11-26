@@ -1,4 +1,5 @@
 const { Socket } = require('net');
+const ping = require('tcp-ping');
 const Validation = require('./Validation');
 const Player = require('../Player/Player');
 const Message = require('../Common/message');
@@ -392,13 +393,28 @@ class Client {
   }
 
   /**
+   * Pings the server to check if it's still up and running.
+   *
+   * @returns {Promise<boolean>} a promise that resolves to a boolean of
+   * whether the server is still alive
+   */
+  _ping() {
+    return new Promise(resolve => {
+      ping.probe(this.ipAddress, this.port, (err, isAlive) => {
+        resolve(isAlive);
+      });
+    });
+  }
+
+  /**
    * @private
    * Event listener for the `end` event which ends the client's session
    * with the server. Will also log an unexpected server disconnect error
    * if such is the cause of the session end.
    */
-  _onServerEnd() {
-    if (this._hasGameStarted && !this._hasGameEnded) {
+  async _onServerEnd() {
+    const isAlive = await this._ping();
+    if (!isAlive) {
       this._logUnexpectedError('The server has gone down.');
     }
     this._endSession();
@@ -428,8 +444,7 @@ class Client {
       handler.bind(this)();
     } else {
       this._logUnexpectedError(`Unknown error (${code}) has occurred.`);
-      // TODO: remove error print
-      console.log(error);
+      this._endSession();
     }
   }
 
