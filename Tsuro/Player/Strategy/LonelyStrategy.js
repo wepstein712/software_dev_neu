@@ -107,12 +107,13 @@ class LonelyStrategy extends Strategy {
   }
 
   /**
+   * @private
    * Returns a random item from the given array.
    *
    * @param {Array} array The array to randomly pick from.
    * @returns {Object} A random item from the array.
    */
-  static randomItem(array) {
+  static _randomItem(array) {
     const max = array.length;
     const index = Math.floor(Math.random() * Math.floor(max));
     return array[index];
@@ -130,7 +131,7 @@ class LonelyStrategy extends Strategy {
   static getInitialAction(id, hand, boardState) {
     const placementCoord = this._findFurthestStartingPosition(boardState); // Find furthest placement
     const startingPositions = this._findValidStartingPosition(placementCoord); // Determine all valid starting positions
-    const position = this.randomItem(startingPositions); // Randomly pick from all starting positions
+    const position = this._randomItem(startingPositions); // Randomly pick from all starting positions
     // Now that we've found the best spot to start in, find all tile configs in hand that work
     const validStartingTiles = [];
     hand.forEach(tile => {
@@ -143,7 +144,7 @@ class LonelyStrategy extends Strategy {
         }
       }
     });
-    const tile = this.randomItem(validStartingTiles);
+    const tile = this._randomItem(validStartingTiles);
     return new InitialAction(tile, placementCoord, position);
   }
 
