@@ -1,6 +1,5 @@
 const { Coords, Position } = require('.');
 const RenderUtils = require('./renderUtils');
-const { DIRECTIONS, PORTS } = require('./utils/constants');
 
 class Avatar {
   /**
@@ -11,15 +10,15 @@ class Avatar {
    * @param {Coords} [coords] the initial coordinates of the avatar
    * @param {Position} [position] the initial position on a tile
    */
-  constructor(id, color, coords, position) {
+  constructor(id, color, coords, position, collided = false, exited = false) {
     this.id = id;
     this.color = color;
 
-    this.coords = coords || new Coords(0, 0);
-    this.position = position || new Position(DIRECTIONS.NORTH, PORTS.ZERO);
+    this.coords = coords;
+    this.position = position;
 
-    this._collided = false;
-    this._exited = false;
+    this._collided = collided;
+    this._exited = exited;
     this._updateHash();
   }
 
@@ -166,6 +165,42 @@ class Avatar {
 
     renderCircle('avatar__shadow');
     renderCircle('avatar').attr('fill', this.color);
+  }
+
+  /**
+   * Converts this Avatar object into JSON to be sent over a TCP
+   * server connection.
+   *
+   * @returns {object} a JSON-ified Avatar object
+   */
+  toJson() {
+    return {
+      id: this.id,
+      color: this.color,
+      coords: this.coords,
+      position: this.position,
+      collided: this._collided,
+      exited: this._exited,
+    };
+  }
+
+  /**
+   * @static
+   * Creates a new Avatar object from the JSON-ified version.
+   *
+   * @param {object} json the JSON-ified Avatar object, as created by
+   * the `toJson` method.
+   */
+  static fromJson(payload) {
+    const { id, color, coords, position, collided, exited } = payload;
+    return new Avatar(
+      id,
+      color,
+      Coords.fromJson(coords),
+      Position.fromJson(position),
+      collided,
+      exited
+    );
   }
 }
 

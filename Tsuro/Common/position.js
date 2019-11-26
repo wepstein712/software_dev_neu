@@ -86,6 +86,31 @@ class Position {
   _updateHash() {
     this._hash = `${this.direction}${this.port}`;
   }
+
+  /**
+   * Converts this Position object into JSON to be sent over
+   * a TCP server connection.
+   *
+   * @returns {object} a JSON-ified Position object
+   */
+  toJson() {
+    return {
+      direction: this.direction,
+      port: this.port,
+    };
+  }
+
+  /**
+   * @static
+   * Creates a new Position object from the JSON-ified version.
+   *
+   * @param {object} json the JSON-ified Position object, as
+   * created by the `toJson` method.
+   */
+  static fromJson(json) {
+    const { direction, port } = json;
+    return new Position(direction, port);
+  }
 }
 
 module.exports = Position;

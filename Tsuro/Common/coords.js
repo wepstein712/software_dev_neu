@@ -96,6 +96,17 @@ class Coords {
   }
 
   /**
+   * Computes the euclidean distance between two points in 2 dimensional space.
+   *
+   * @param {Coords} coord1 The coordinate on a cartesian plane of a point
+   * @param {Coords} coord2 The coordinate on a cartesian plane of a point
+   * @returns {number} the euclidean distance between the given 2 points.
+   */
+  static euclideanDistance(coord1, coord2) {
+    return Math.sqrt(Math.pow(coord1.x - coord2.x, 2) + Math.pow(coord1.y - coord2.y, 2));
+  }
+
+  /**
    * Checks the equality of this coords and the given one.
    *
    * @param {Coords} coords the Coords to check equality against
@@ -104,7 +115,7 @@ class Coords {
   isEqualTo(coords) {
     return this.x === coords.x && this.y === coords.y;
   }
-  
+
   /**
    * @private
    * Updates the hash for this Coords when the x and/or
@@ -112,6 +123,31 @@ class Coords {
    */
   _updateHash() {
     this._hash = `${this.x}${this.y}`;
+  }
+
+  /**
+   * Converts this Coords object into JSON to be sent over
+   * a TCP server connection.
+   *
+   * @returns {object} a JSON-ified Coords object
+   */
+  toJson() {
+    return {
+      x: this.x,
+      y: this.y,
+    };
+  }
+
+  /**
+   * @static
+   * Creates a new Coords object from the JSON-ified version.
+   *
+   * @param {object} json the JSON-ified Coords object, as
+   * created by the `toJson` method.
+   */
+  static fromJson(json) {
+    const { x, y } = json;
+    return new Coords(x, y);
   }
 }
 

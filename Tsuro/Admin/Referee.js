@@ -1,5 +1,5 @@
-const { Board, RuleChecker } = require('../Common');
-const { getTileFromLetters, incrementIndex } = require('../Common/utils');
+const { Board, RuleChecker, SimpleTile } = require('../Common');
+const { incrementIndex } = require('../Common/utils');
 const { COLORS } = require('../Common/utils/constants');
 const { tiles } = require('../Common/__tests__');
 
@@ -7,13 +7,18 @@ const COLOR_SET = [COLORS.WHITE, COLORS.BLACK, COLORS.RED, COLORS.GREEN, COLORS.
 
 class Referee {
   /**
+   * @constructor
    * Creates a new Referee with a new board and no players.
+   *
+   * @param {Logger} logger the server's logger to add new messages
    */
-  constructor() {
+  constructor(logger) {
+    this.logger = logger;
     this.board = new Board();
     this.currentPlayerIdx = -1;
     this.deckIdx = 0;
     this.currentTurn = 0;
+    this._hasGameStarted = false;
 
     this.playerMap = {};
     this.currentPlayers = {};
@@ -32,6 +37,10 @@ class Referee {
   addObserver(observer) {
     const { id } = observer;
     this.observerMap[id] = observer;
+
+    this.playerIds.forEach(playerId => {
+      observer.setColor(playerId, this.playerMap[playerId].getColor());
+    });
   }
 
   /**
@@ -60,6 +69,7 @@ class Referee {
    * Adds a player to the current game, and sets their color.
    *
    * @param {Player} player the player to add to the game
+   * @returns {string} the color the player was set to
    */
   addPlayer(player) {
     const playerIdx = this.playerIds.length;
@@ -67,28 +77,30 @@ class Referee {
       throw 'Max players already added.';
     }
     const { id } = player;
+    const color = COLOR_SET[playerIdx];
+    player.setColor(id, color);
+
+    this.playerIds.forEach(playerId => {
+      // sets this player's color for existing players
+      this.playerMap[playerId].setColor(id, color);
+      // sets existing player's color for this player
+      const playerColor = this.playerMap[playerId].getColor();
+      player.setColor(playerId, playerColor);
+    });
+
+    this._updateObservers(observer => {
+      observer.setPlayerColor(id, color);
+    });
+
     this.playerMap[id] = player;
     this.currentPlayers[id] = player;
     this.playerIds.push(id);
-    player.setColor(COLOR_SET[playerIdx]);
+
+    return color;
   }
 
-  /**
-   * Notifies all players and observers of the other players' colors.
-   */
-  notifyPlayersOfColors() {
-    const idToColorMap = this.playerIds.reduce((acc, id) => {
-      const color = this.playerMap[id].getColor();
-      return Object.assign(acc, {
-        [id]: color,
-      });
-    }, {});
-    this.playerIds.forEach(id => {
-      this.playerMap[id].setPlayerColors(idToColorMap);
-    });
-    this._updateObservers(observer => {
-      observer.setPlayerColors(idToColorMap);
-    });
+  getPlayers() {
+    return Object.keys(this.currentPlayers);
   }
 
   /**
@@ -128,8 +140,7 @@ class Referee {
   _getHand(size) {
     const hand = [];
     for (let i = 0; i < size; i++) {
-      const tile = getTileFromLetters(tiles[this.deckIdx]);
-      hand.push(tile);
+      hand.push(new SimpleTile(this.deckIdx));
       this.deckIdx = incrementIndex(this.deckIdx, tiles);
     }
     return hand;
@@ -145,6 +156,7 @@ class Referee {
    * @returns {BoardState} the current board state
    */
   _startPlayerTurn(player, handSize) {
+    this.logger.debug(player.id, 'has started their turn.');
     this.currentTurn += 1;
     const boardState = this.board.getState();
     player.updateState(boardState);
@@ -169,7 +181,7 @@ class Referee {
    *
    * @param {BoardState} boardState the current state of the board
    * @param {Player} player the player to check legality for
-   * @param {Action} action the action to check legality for
+   * @param {BaseAction} action the action to check legality for
    * @param {boolean} [isInitial=false] whether the given action is
    * initial or intermediate
    * @returns {boolean} whether the given action is legal for the
@@ -200,7 +212,7 @@ class Referee {
    *
    * @param {BoardState} boardState the current state of the board
    * @param {Player} player the player to check validity for
-   * @param {Action} action the action to check validity for
+   * @param {BaseAction} action the action to check validity for
    * @param {boolean} [isInitial=false] whether the given action is
    * initial or intermediate
    * @returns {boolean} whether the given action is valid for the
@@ -230,31 +242,42 @@ class Referee {
     this._updateObservers(observer => {
       observer.updateState(boardState);
     });
+    this.logger.debug(player.id, 'has ended their turn.');
   }
 
   /**
-   * @private
    * Removes a player from play.
    *
-   * @param {Player} player the player to remove from play
+   * @param {string} playerId the ID of the player to remove from play
    * @param {boolean} [fromLegalMove=true] will add to rejected players if false
+   * @param {boolean} [permanent=false] whether the player should be removed
+   * permanently from the game (e.g.: client has disconnected from game)
    */
-  _removePlayer(player, fromLegalMove = true) {
-    const { id } = player;
-    delete this.currentPlayers[id];
+  removePlayer(playerId, fromLegalMove = true, permanent = false) {
+    if (this.currentPlayers[playerId]) {
+      delete this.currentPlayers[playerId];
 
-    if (fromLegalMove) {
-      this.removedPlayersForTurn[this.currentTurn] = [
-        ...(this.removedPlayersForTurn[this.currentTurn] || []),
-        id,
-      ];
-    } else {
-      this.rejectedPlayers.push(id);
+      if (permanent && !this._hasGameStarted) {
+        const playerIndex = this.playerIds.findIndex(id => id === playerId);
+        this.playerIds.splice(playerIndex, 1);
+        delete this.playerMap[playerId];
+      } else {
+        if (fromLegalMove) {
+          this.removedPlayersForTurn[this.currentTurn] = [
+            ...(this.removedPlayersForTurn[this.currentTurn] || []),
+            playerId,
+          ];
+        } else {
+          this.rejectedPlayers.push(playerId);
+        }
+
+        const player = this.playerMap[playerId];
+        player.lose(fromLegalMove);
+        this._updateObservers(observer => {
+          observer.removePlayer(playerId);
+        });
+      }
     }
-
-    this._updateObservers(observer => {
-      observer.removePlayer(id);
-    });
   }
 
   /**
@@ -263,7 +286,7 @@ class Referee {
    * avatar if the action is initial. Then ends player's turn.
    *
    * @param {Player} player the player to use the action for
-   * @param {Action} action the action to use
+   * @param {BaseAction} action the action to use
    * @param {boolean} [isInitial=false] whether the action is initial or intermediate
    */
   _usePlayerAction(player, action, isInitial = false) {
@@ -272,7 +295,7 @@ class Referee {
       try {
         this.board.placeInitialTileAvatar(player, tile, coords, position);
       } catch (err) {
-        this._removePlayer(player);
+        this.removePlayer(player.id);
       }
     } else {
       this.board.placeTile(tile, coords);
@@ -294,17 +317,22 @@ class Referee {
    * @param {boolean} [isInitial=false] whether to prompt for an initial or
    * intermediate action
    */
-  _promptPlayerForAction(player, isInitial = false) {
+  async _promptPlayerForAction(player, isInitial = false) {
     const handSize = isInitial ? 3 : 2;
     const boardState = this._startPlayerTurn(player, handSize);
-    const action = player.getAction(isInitial);
-    const isLegal = this._checkForActionLegality(boardState, player, action, isInitial);
-    const isValid = this._checkForActionValidity(boardState, player, action, isInitial);
-    if (!isValid || !isLegal) {
-      this._removePlayer(player, isLegal);
-    }
-    if (isLegal) {
-      this._usePlayerAction(player, action, isInitial);
+
+    try {
+      const action = await player.getAction(isInitial);
+      const isLegal = this._checkForActionLegality(boardState, player, action, isInitial);
+      const isValid = this._checkForActionValidity(boardState, player, action, isInitial);
+      if (!isValid || !isLegal) {
+        this.removePlayer(player.id, isLegal);
+      }
+      if (isLegal) {
+        this._usePlayerAction(player, action, isInitial);
+      }
+    } catch (err) {
+      this.removePlayer(player.id, false);
     }
   }
 
@@ -316,30 +344,29 @@ class Referee {
    * avatar and can move, they will be prompted for an intermediate action. If
    * neither, they will be removed from play.
    */
-  _nextPlayer() {
+  async _nextPlayer() {
     this.currentPlayerIdx = incrementIndex(this.currentPlayerIdx, this.playerIds);
     const id = this.playerIds[this.currentPlayerIdx];
     const player = this.currentPlayers[id];
 
     if (player) {
       if (!this._hasAvatar(player)) {
-        this._promptPlayerForAction(player, true);
+        await this._promptPlayerForAction(player, true);
       } else if (this._canPlayerMove(player)) {
-        this._promptPlayerForAction(player);
+        await this._promptPlayerForAction(player);
       } else {
-        this._removePlayer(player);
+        this.removePlayer(player.id);
       }
     }
   }
 
   /**
-   * @private
    * Checks whether the game is over yet, that is if one or no players
    * are left on the board.
    *
    * @returns {boolean} whether the game is over yet
    */
-  _isGameOver() {
+  isGameOver() {
     return Object.keys(this.currentPlayers).length <= 1;
   }
 
@@ -379,8 +406,9 @@ class Referee {
    */
   _notifyPlayersOfGameOver() {
     const winners = this.getWinners();
+    const losers = this.getLosers();
     this.playerIds.forEach(id => {
-      this.playerMap[id].endGame(winners);
+      this.playerMap[id].endGame(winners, losers);
     });
   }
 
@@ -389,16 +417,20 @@ class Referee {
    * will loop until the game is over, at which point all players will
    * be notified of game over and who won.
    */
-  runGame() {
-    if (this.playerIds.length <= 1) {
-      throw 'At least two players are required to game.';
-    }
+  async runGame() {
+    if (!this._hasGameStarted) {
+      if (this.playerIds.length <= 1) {
+        throw 'At least two players are required to game.';
+      }
 
-    while (!this._isGameOver()) {
-      this._nextPlayer();
-    }
+      this._hasGameStarted = true;
 
-    this._notifyPlayersOfGameOver();
+      while (!this.isGameOver()) {
+        await this._nextPlayer();
+      }
+
+      this._notifyPlayersOfGameOver();
+    }
   }
 }
 

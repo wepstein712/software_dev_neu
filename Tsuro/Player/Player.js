@@ -1,26 +1,24 @@
+const BasePlayer = require('./BasePlayer');
 const { BoardState } = require('../Common');
 const { GAME_STATUS } = require('../Common/utils/constants');
 
-class Player {
+class Player extends BasePlayer {
   /**
+   * @constructor
    * Creates a new Player, with an empty hand. Sets `gameStatus`
    * to `Waiting` and the `boardState` to an empty board.
    *
    * @param {string} id the unique ID of the player
    * @param {string} name the name of the player
-   * @param {Strategy} strategy a strategy implementation to be used
-   * to make moves for the player
+   * @param {string} strategy the key for the strategy implementation to
+   * be used to make moves for the player
    */
   constructor(id, name, strategy) {
-    this.id = id;
-    this.name = name;
-    this.strategy = strategy;
-
+    super(id, name, strategy);
     this.colors = {};
     this.hand = [];
     this.gameStatus = GAME_STATUS.WAITING;
     this.boardState = new BoardState();
-    this._shouldPrintResults = true;
   }
 
   /**
@@ -46,12 +44,13 @@ class Player {
   }
 
   /**
-   * Sets this player's color to the referee-assigned color.
+   * Sets the player of the given ID's color to the referee-assigned color.
    *
-   * @param {string} color this player's avatar's color
+   * @param {string} id the id of the player
+   * @param {string} color the player's avatar's color
    */
-  setColor(color) {
-    this.colors[this.id] = color;
+  setColor(id, color) {
+    this.colors[id] = color;
   }
 
   /**
@@ -61,17 +60,6 @@ class Player {
    */
   getColor() {
     return this.colors[this.id];
-  }
-
-  /**
-   * Adds a map of player IDs to colors, so this player knows which player
-   * is which color in the game.
-   *
-   * @param {{ [id: string]: string }} colorMap a map of player's ID to their
-   * associated avatar color
-   */
-  setPlayerColors(colorMap) {
-    this.colors = Object.assign(this.colors, colorMap);
   }
 
   /**
@@ -85,34 +73,38 @@ class Player {
   }
 
   /**
+   * @async
    * Gets either a player's initial or intermediate action, as determined
    * by the strategy.
    *
    * @param {boolean} [isInitial=false] whether the action to retrieve
    * should be the player's initial action
+   * @returns {InitialAction|IntermediateAction} the respective Action
    */
-  getAction(isInitial = false) {
+  async getAction(isInitial = false) {
     if (isInitial) {
-      return this.getInitialAction();
+      return this._getInitialAction();
     }
-    return this.getIntermediateAction();
+    return this._getIntermediateAction();
   }
 
   /**
+   * @private
    * Gets the initial action of this player, as determined by the strategy,
    *
    * @returns {InitialAction} the player's initial action
    */
-  getInitialAction() {
+  _getInitialAction() {
     return this.strategy.getInitialAction(this.id, this.hand, this.boardState);
   }
 
   /**
+   * @private
    * Gets the next intermediate action for the player, as determined by the strategy.
    *
    * @returns {IntermediateAction} the player's next action
    */
-  getIntermediateAction() {
+  _getIntermediateAction() {
     return this.strategy.getIntermediateAction(this.id, this.hand, this.boardState);
   }
 
@@ -124,25 +116,26 @@ class Player {
   }
 
   /**
-   * Sets whether this player will print out who won their game at the end.
-   * @param {Boolean} flag if the player should print
+   * Informs the player that they have lost in the game.
+   *
+   * @param {boolean} forLegalMove whether the player lost for a legal move
    */
-  setPlayerPrintResultsStatus(flag) {
-    this._shouldPrintResults = flag;
+  // eslint-disable-next-line no-unused-vars
+  lose(forLegalMove) {
+    // stub, nothing need happen
   }
 
   /**
    * Sets the `gameStatus` to `GameOver`. This signals to the player
    * that the game is now over, and which player(s) won.
    *
-   * @param {string[]} winners the player ID(s) of the winner(s)
-   * of the game
+   * @param {string[][]} winners the player IDs of the winners of the game,
+   * separated by winner place
+   * @param {string[]} losers the player IDs of the losers of the game
    */
-  endGame(winners) {
+  // eslint-disable-next-line no-unused-vars
+  endGame(winners, losers) {
     this.gameStatus = GAME_STATUS.GAME_OVER;
-    if (this._shouldPrintResults) {
-      console.log(winners);
-    }
   }
 }
 

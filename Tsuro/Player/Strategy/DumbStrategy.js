@@ -6,7 +6,7 @@ const {
   RuleChecker,
 } = require('../../Common');
 const { DIRECTIONS, DIRECTIONS_CLOCKWISE, PORTS } = require('../../Common/utils/constants');
-const Strategy = require('./Strategy');
+const { BaseStrategy } = require('.');
 
 // Array for determining direction to check for next valid space
 const DIRECTIONS_CHECK = [DIRECTIONS.EAST, DIRECTIONS.SOUTH, DIRECTIONS.WEST, DIRECTIONS.NORTH];
@@ -20,7 +20,7 @@ const POSITIONS_CHECK = DIRECTIONS_CLOCKWISE.reduce(
   []
 );
 
-class DumbStrategy extends Strategy {
+class DumbStrategy extends BaseStrategy {
   /**
    * @private
    * Gets a valid position to place an avatar on, at the given coords and

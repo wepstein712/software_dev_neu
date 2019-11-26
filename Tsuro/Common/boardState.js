@@ -1,4 +1,4 @@
-const { Avatar, Tile } = require('.');
+const { Avatar, SimpleTile, Tile } = require('.');
 const { getEmptyBoardArray } = require('./utils');
 const { BOARD_SIZE, DIRECTIONS_CLOCKWISE } = require('./utils/constants');
 require('./utils/polyfills');
@@ -146,6 +146,16 @@ class BoardState {
   }
 
   /**
+   * Gets the number of placed tiles adjacent to the given coordinates.
+   * @param {Coords} coords the coordinates of the tile
+   */
+  getNumberOfNeighboringTiles(coords) {
+    const neighbors = DIRECTIONS_CLOCKWISE.filter(direction =>
+      this._getNeighboringTile(coords, direction)
+    );
+    return neighbors.length;
+  }
+  /**
    * Checks whether a tile with the given coordinates has any
    * neighboring tiles.
    *
@@ -230,6 +240,47 @@ class BoardState {
     this.getAvatars().forEach(avatar => {
       avatar.render(avatarGroup, xStart, yStart, tileSize);
     });
+  }
+
+  /**
+   * Converts this BoardState object into JSON to be sent over
+   * a TCP server connection.
+   *
+   * @returns {object} a JSON-ified BoardState object
+   */
+  toJson() {
+    const tiles = this._tiles.map(row => row.map(tile => (tile ? tile.index : null)));
+    const avatars = this.getAvatars().map(avatar => avatar.toJson());
+    return {
+      tiles,
+      avatars,
+      initialAvatarHashes: this._initialAvatarHashes,
+    };
+  }
+
+  /**
+   * @static
+   * Creates a new BoardState object from the JSON-ified version.
+   *
+   * @param {object} json the JSON-ified BoardState object, as
+   * created by the `toJson` method.
+   */
+  static fromJson(json) {
+    const { tiles, avatars, initialAvatarHashes } = json;
+    const bsTiles = tiles.map(row => row.map(tile => (tile ? new SimpleTile(tile) : null)));
+    const bsAvatars = avatars.reduce(
+      (acc, avatar) =>
+        Object.assign(acc, {
+          [avatar.id]: Avatar.fromJson(avatar),
+        }),
+      {}
+    );
+    const newState = {
+      _tiles: bsTiles,
+      _avatars: bsAvatars,
+      _initialAvatarHashes: initialAvatarHashes,
+    };
+    return new BoardState(newState);
   }
 }
 
