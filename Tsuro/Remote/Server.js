@@ -135,7 +135,7 @@ class Server {
     const stringMessage = message.toString();
 
     client.write(stringMessage);
-    this.logger.log(this._getIdFromSession(sessionId), '<<', stringMessage);
+    this.logger.logTo(this._getIdFromSession(sessionId), stringMessage);
 
     setTimeout(() => {
       client.destroy();
@@ -258,11 +258,7 @@ class Server {
   _handleMessage(sessionId, message) {
     const { action, payload } = message;
 
-    this.logger.log(
-      this._getIdFromSession(sessionId),
-      '>>',
-      new Message(action, payload).toString()
-    );
+    this.logger.logFrom(this._getIdFromSession(sessionId), new Message(action, payload).toString());
     const handler = this.handlers[action];
     if (handler) {
       handler.bind(this)(sessionId, payload);

@@ -61,7 +61,7 @@ class ProxyPlayer extends BasePlayer {
       const stringMessage = message.toString();
 
       this._client.write(stringMessage);
-      this.logger.log(this.id, '<<', stringMessage);
+      this.logger.logTo(this.id, stringMessage);
     }
   }
 
@@ -164,7 +164,7 @@ class ProxyPlayer extends BasePlayer {
             if (action !== MESSAGE_ACTIONS.SEND_ACTION) {
               reject(MESSAGE_ACTIONS.UNKNOWN_ACTION);
             } else {
-              this.logger.log(this.id, '>>', new Message(action, payload).toString());
+              this.logger.logFrom(this.id, new Message(action, payload).toString());
               resolve(this._getActionFromPayload(payload, isInitial));
             }
           } catch (err) {
