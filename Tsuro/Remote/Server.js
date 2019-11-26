@@ -27,13 +27,13 @@ class Server {
    * the server at
    * @param {number} [port=8000] the port to host the server at
    */
-  constructor(ipAddress = DEFAULT_CONN.IP_ADDRESS, port = DEFAULT_CONN.PORT) {
+  constructor(ipAddress = DEFAULT_CONN.IP_ADDRESS, port = DEFAULT_CONN.PORT, path) {
     this.ipAddress = ipAddress;
     this.port = port;
     this.server = null;
     this.clients = {};
 
-    this.logger = new Logger();
+    this.logger = new Logger(path);
     this.referee = new Referee(this.logger);
 
     this._standbyTimeout = null;
@@ -74,6 +74,7 @@ class Server {
       Object.values(this.clients).forEach(({ client }) => {
         client.destroy();
       });
+      this.logger.write();
       process.exit(0);
     }, EXIT_TIMEOUT);
   }
@@ -218,7 +219,9 @@ class Server {
     const { client } = this.clients[sessionId];
     const { id, strategy } = payload;
 
-    if (!Validation.testName(id)) {
+    if (this._hasGameStarted) {
+      return this._kickClient(client, MESSAGE_ACTIONS.DENY_ENTRY, 'Game has already begun.');
+    } else if (!Validation.testName(id)) {
       this._endClientSession(sessionId, MESSAGE_ACTIONS.INVALID_ID, 'Alphanumeric names only.');
     } else if (!Validation.testStrategy(strategy)) {
       this._endClientSession(sessionId, MESSAGE_ACTIONS.UNKNOWN_STRAT, 'Strategy does not exist.');

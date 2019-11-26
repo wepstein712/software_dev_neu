@@ -7,7 +7,7 @@ const main = async () => {
   const ipAddress = flags[0] || DEFAULT_CONN.IP_ADDRESS;
   const port = flags[1] || DEFAULT_CONN.PORT;
 
-  new Server(ipAddress, port);
+  new Server(ipAddress, port, 'xserver.log');
 
   try {
     const players = await getInput();

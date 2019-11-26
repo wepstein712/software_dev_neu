@@ -1,5 +1,8 @@
+const fs = require('fs');
+
 class Logger {
-  constructor() {
+  constructor(path) {
+    this.path = path;
     this.history = [];
   }
 
@@ -19,6 +22,11 @@ class Logger {
 
   log(id, ...message) {
     this._addMessage([id, ...message]);
+  }
+
+  write() {
+    const data = this.get().join('\n');
+    fs.writeFileSync(this.path, data);
   }
 }
 
