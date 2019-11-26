@@ -111,9 +111,7 @@ class Client {
    */
   _sendMessage(action, payload) {
     const message = new Message(action, payload);
-    setTimeout(() => {
-      this.client.write(message.toString());
-    }, 1000);
+    this.client.write(message.toString());
   }
 
   /**

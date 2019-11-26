@@ -12,7 +12,7 @@ const main = async () => {
   const _defaultLog = console.log;
   console.log = () => {};
 
-  new Server(ipAddress, port, 'xserver.log');
+  new Server(ipAddress, port, 'xrun.log');
 
   try {
     const players = await getInput();
