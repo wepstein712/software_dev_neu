@@ -123,9 +123,9 @@ class LessDumbStrategy extends Strategy {
     const validStartingTiles = [];
     hand.forEach(tile => {
       for (let i = 0; i < 4; i++) {
-        const tile = tile.copy(i);
-        if (RuleChecker.canPlaceAvatar(boardState, id, placementCoord, tile, position)) {
-          validStartingTiles.push(tile);
+        const tileCopy = tile.copy(i);
+        if (RuleChecker.canPlaceAvatar(boardState, id, placementCoord, tileCopy, position)) {
+          validStartingTiles.push(tileCopy);
         }
       }
     });
