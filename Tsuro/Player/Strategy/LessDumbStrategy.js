@@ -69,6 +69,7 @@ class LessDumbStrategy extends Strategy {
 
   /**
    * Makes a list of positions that are valid given a coordinate that would lie on the outside of the board.
+   *
    * @param {Coords} coord the place we are checking
    * @returns {Position[]} the positions that would be valid to put as an initial placement.
    */
