@@ -157,6 +157,13 @@ class ProxyPlayer extends BasePlayer {
   async getAction(isInitial = false) {
     try {
       const action = await new Promise((resolve, reject) => {
+        /**
+         * Event handler for `data` that resolves the promise when
+         * the client sends a `SEND_ACTION` message, and rejects on
+         * a message with any other action or invalid JSON.
+         *
+         * @param {Buffer} data the data buffer of the client message
+         */
         const onData = data => {
           const text = data.toString().trim();
           try {
@@ -172,11 +179,17 @@ class ProxyPlayer extends BasePlayer {
             reject(MESSAGE_ACTIONS.INVALID_JSON);
           }
         };
+
+        /**
+         * Event handler for `end` that rejects the promise on grounds
+         * that the client has disconnected.
+         */
+        const onEnd = () => {
+          reject('Client has disconnected.');
+        };
+
         this._client.once('data', onData);
-        // TODO: maybe add end listener too?
-        // this._client.on('end', () => {
-        //   console.log('disconnected');
-        // });
+        this._client.on('end', onEnd);
         this._sendMessage(MESSAGE_ACTIONS.PROMPT_FOR_ACTION, isInitial);
       });
       return action;
