@@ -80,7 +80,7 @@ class LonelyStrategy extends Strategy {
 
     /**
      * Pushes a pair of positions for ports 0 and 1 with the given direction to the validPositions array.
-     * @param direction The direction for the new positions
+     * @param {string} direction The direction for the new positions
      */
     const addPositionsForDirection = direction => {
       [PORTS.ZERO, PORTS.ONE].forEach(port => {
