@@ -261,8 +261,6 @@ class Referee {
         const playerIndex = this.playerIds.findIndex(id => id === playerId);
         this.playerIds.splice(playerIndex, 1);
         delete this.playerMap[playerId];
-
-        // alert observer and other players of permanent player remove
       } else {
         if (fromLegalMove) {
           this.removedPlayersForTurn[this.currentTurn] = [
