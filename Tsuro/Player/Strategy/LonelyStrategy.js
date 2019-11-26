@@ -175,7 +175,7 @@ class LonelyStrategy extends Strategy {
       for (let i = 0; i < 4; i++) {
         // 4 Rotations
         const action = new IntermediateAction(tile.copy(i), coords);
-        if (RuleChecker.canTakeAction(boardState, action, mockPlayer)) {
+        if (RuleChecker.canTakeAction(boardState, action, mockPlayer) || !bestAction) {
           // The best action is the one with the highest Action value
           const actionValue = this._getActionValue(boardState, coords);
           if (actionValue > bestActionValue || !bestAction) {
