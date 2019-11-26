@@ -1,8 +1,9 @@
-const DumbStrategy = require('./Strategy/DumbStrategy');
+const { DumbStrategy, LonelyStrategy } = require('./Strategy');
 const { STRATEGIES } = require('../Common/utils/constants');
 
 const STRATEGY_MAP = {
   [STRATEGIES.DUMB]: DumbStrategy,
+  [STRATEGIES.LONELY]: LonelyStrategy,
 };
 
 class BasePlayer {

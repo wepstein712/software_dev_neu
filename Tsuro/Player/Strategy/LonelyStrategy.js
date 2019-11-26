@@ -5,11 +5,10 @@ const {
   Position,
   RuleChecker,
 } = require('../../Common');
-const { DIRECTIONS, PORTS, BOARD_SIZE } = require('../../Common/utils/constants');
-const Strategy = require('./Strategy');
-const Player = require('../Player');
+const { BOARD_SIZE, DIRECTIONS, PORTS } = require('../../Common/utils/constants');
+const { BaseStrategy } = require('.');
 
-class LonelyStrategy extends Strategy {
+class LonelyStrategy extends BaseStrategy {
   /**
    * @private
    * Computes the initial placement that will be furthest from all other tiles. Does this by valuing the
@@ -165,8 +164,7 @@ class LonelyStrategy extends Strategy {
   static getIntermediateAction(id, hand, boardState) {
     const avatar = boardState.getAvatar(id);
     const coords = avatar.coords.copy().moveOne(avatar.position.direction);
-    const mockPlayer = new Player(id, id, null);
-    mockPlayer.receiveHand(hand);
+    const mockPlayer = { id, hand };
 
     let bestAction = null;
     let bestActionValue = -1;
@@ -175,10 +173,10 @@ class LonelyStrategy extends Strategy {
       for (let i = 0; i < 4; i++) {
         // 4 Rotations
         const action = new IntermediateAction(tile.copy(i), coords);
-        if (RuleChecker.canTakeAction(boardState, action, mockPlayer) || !bestAction) {
+        if (!bestAction || RuleChecker.canTakeAction(boardState, action, mockPlayer)) {
           // The best action is the one with the highest Action value
           const actionValue = this._getActionValue(boardState, coords);
-          if (actionValue > bestActionValue || !bestAction) {
+          if (!bestAction || actionValue > bestActionValue) {
             bestActionValue = actionValue;
             bestAction = action;
           }

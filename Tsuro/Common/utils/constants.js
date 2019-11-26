@@ -78,4 +78,5 @@ exports.SECOND = 1000;
 
 exports.STRATEGIES = {
   DUMB: 'dumb',
+  LONELY: 'lonely',
 };

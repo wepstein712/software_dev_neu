@@ -69,7 +69,7 @@ All server logs can be found in the `xrun.log` file (stored in the directory the
   },
   {
     "name": "greg",
-    "strategy": "dumb"
+    "strategy": "lonely"
   }
 ]
 ```

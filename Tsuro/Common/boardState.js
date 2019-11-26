@@ -278,7 +278,7 @@ class BoardState {
     const newState = {
       _tiles: bsTiles,
       _avatars: bsAvatars,
-      _initialAvatarHashed: initialAvatarHashes,
+      _initialAvatarHashes: initialAvatarHashes,
     };
     return new BoardState(newState);
   }
