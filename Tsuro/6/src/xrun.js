@@ -7,6 +7,11 @@ const main = async () => {
   const ipAddress = flags[0] || DEFAULT_CONN.IP_ADDRESS;
   const port = flags[1] || DEFAULT_CONN.PORT;
 
+  // Disables logging for server and clients, and stores default
+  // functionality in `_defaultLog`
+  const _defaultLog = console.log;
+  console.log = () => {};
+
   new Server(ipAddress, port, 'xserver.log');
 
   try {
@@ -20,7 +25,7 @@ const main = async () => {
       new Client(ipAddress, port, name, strategy);
     });
   } catch (err) {
-    console.log(err);
+    _defaultLog(err);
     process.exit(0);
   }
 };
