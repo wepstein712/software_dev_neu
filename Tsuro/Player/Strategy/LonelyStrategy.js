@@ -178,7 +178,7 @@ class LonelyStrategy extends Strategy {
         if (RuleChecker.canTakeAction(boardState, action, mockPlayer)) {
           // The best action is the one with the highest Action value
           const actionValue = this._getActionValue(boardState, coords);
-          if (actionValue > bestActionValue) {
+          if (actionValue > bestActionValue || !bestAction) {
             bestActionValue = actionValue;
             bestAction = action;
           }
