@@ -1,0 +1,14 @@
+* (25/25) Delivery of artifacts
+* (25/15) player.md and referee.md (EC: +15 points)
+    - (+5) take a turn
+    - (+5) place initial tile 
+* (22/25) rules.PP method checking initial move
+    - (-3) not checking if the tile is one of the provided tiles 
+* (18/20) rules.PP method checking intermediate move
+    - (-2) not checking if the tile is one of the provided tiles 
+* (23/25) Testing
+    - (-2) didn't test for invalid input case
+
+Total: (113/110)
+
+Graded by Ivan Chen.
