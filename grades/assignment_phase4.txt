@@ -1,0 +1,15 @@
+* (6/6) Delivery of artifacts
+* (5/5) Design task
+* (29/29) referee.pp
+* (20/20) rules.PP method checking intermediate move
+* (0/20) Testing
+    - Throws - 
+    internal/modules/cjs/loader.js:638
+    throw err;
+    ^
+    Error: Cannot find module 'd3-node'
+
+
+Total: (80/80)
+
+Graded by Sai.
