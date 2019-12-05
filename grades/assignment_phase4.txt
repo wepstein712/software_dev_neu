@@ -10,6 +10,6 @@
     Error: Cannot find module 'd3-node'
 
 
-Total: (80/80)
+Total: (60/80)
 
 Graded by Sai.
