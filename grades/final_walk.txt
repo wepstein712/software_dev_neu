@@ -1,0 +1,9 @@
+
+Date: 12/5
+
+Grade: 9/10
+
+Comments:
+  + very good overall
+  + errors in client-server communication handled very well
+

@@ -1,0 +1,20 @@
+
+Date: 11/19
+
+* (4/5) Overview
+  - good
+  - UML a bit hard to read
+  - overview of tile representation
+* (5/5) Source code
+  - code could be better organized
+  - well-commented
+* (5/5) Presentation style
+  - good style overall
+* (5/5) Participation
+  - good handling of questions
+    
+
+Total: (19/20)
+
+Graded by: Ferd
+
