@@ -1,0 +1,11 @@
+* Delivery of artifacts: 6/6
+
+* Programming task: 25/25
+
+* Referee testing task: 21/21
+
+* Graphical observer testing task: 30/30
+
+Total: 82/82
+
+Graded by Divya.
