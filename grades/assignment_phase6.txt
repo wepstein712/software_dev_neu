@@ -1,0 +1,8 @@
+* (7/7) Delivery of artifacts
+* (10/10) Second strategy and server
+    - (-0) server receives and sends message (code walk)
+* (8/8) xserver/xclient/xrun (code walk)
+
+Total: (25/25)
+
+Graded by Ivan and Ferd (during code walk).
